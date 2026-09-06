@@ -1,7 +1,9 @@
 import { BaseEntity } from './BaseEntity';
 import type { Actor, Genre, TmdbMovieDto, VideoTrailer } from './types';
-import { formatCurrencyUSD, formatRuntime } from '../core/utils';
+import { formatCurrencyUSD, formatRuntime, formatDate } from '../core/utils';
 import { getConfig } from '../core/config';
+
+export type TheatricalStatus = 'IN_THEATERS' | 'UPCOMING' | 'OUT_OF_THEATERS' | 'UNKNOWN';
 
 export class Movie extends BaseEntity {
   public readonly title: string;
@@ -19,6 +21,9 @@ export class Movie extends BaseEntity {
   public readonly trailerKey: string | null;
   public readonly cast: Actor[];
   public readonly director: string | null;
+  public readonly theatricalStatus: TheatricalStatus;
+  public readonly peruReleaseDate: string | null;
+  public readonly peruCertification: string | null;
 
   constructor(params: {
     id: number;
@@ -37,6 +42,9 @@ export class Movie extends BaseEntity {
     trailerKey?: string | null;
     cast?: Actor[];
     director?: string | null;
+    theatricalStatus?: TheatricalStatus;
+    peruReleaseDate?: string | null;
+    peruCertification?: string | null;
     createdAt?: Date | string | null;
   }) {
     super(params.id, params.createdAt);
@@ -55,6 +63,9 @@ export class Movie extends BaseEntity {
     this.trailerKey = params.trailerKey ?? null;
     this.cast = params.cast ?? [];
     this.director = params.director ?? null;
+    this.theatricalStatus = params.theatricalStatus || 'UNKNOWN';
+    this.peruReleaseDate = params.peruReleaseDate || null;
+    this.peruCertification = params.peruCertification || null;
   }
 
   public get numericId(): number {
@@ -96,9 +107,6 @@ export class Movie extends BaseEntity {
     return formatCurrencyUSD(this.revenue);
   }
 
-  /**
-   * Puntuación normalizada de 1 a 5 estrellas (a partir del 0-10 de TMDb).
-   */
   public getStarRating(): number {
     return Math.round((this.voteAverage / 2) * 10) / 10;
   }
@@ -108,7 +116,42 @@ export class Movie extends BaseEntity {
     return `https://www.youtube.com/embed/${this.trailerKey}?autoplay=0&rel=0`;
   }
 
-  public static fromTmdbDto(dto: TmdbMovieDto): Movie {
+  public getTheatricalBadge(): { label: string; sublabel: string; color: 'emerald' | 'sky' | 'amber' } {
+    const certText = this.peruCertification ? `Clasificación: ${this.peruCertification}` : '';
+    const dateText = this.peruReleaseDate ? `Estreno en Perú: ${formatDate(this.peruReleaseDate)}` : '';
+    const details = [certText, dateText].filter(Boolean).join(' • ');
+
+    switch (this.theatricalStatus) {
+      case 'IN_THEATERS':
+        return {
+          label: 'Confirmada en Cartelera en Cines de Perú',
+          sublabel: details || 'Proyectándose actualmente en salas comerciales',
+          color: 'emerald',
+        };
+      case 'UPCOMING':
+        return {
+          label: 'Próximo Estreno en Cines de Perú',
+          sublabel: details || 'Próximamente en salas comerciales',
+          color: 'sky',
+        };
+      case 'OUT_OF_THEATERS':
+      default:
+        return {
+          label: 'Fin de Temporada en Cines de Perú',
+          sublabel: 'Disponible actualmente en plataformas de Streaming / Formato Digital',
+          color: 'amber',
+        };
+    }
+  }
+
+  public static fromTmdbDto(
+    dto: TmdbMovieDto,
+    theatricalInfo?: {
+      status: TheatricalStatus;
+      peruReleaseDate: string | null;
+      peruCertification: string | null;
+    }
+  ): Movie {
     // Buscar trailer oficial de YouTube
     let trailerKey: string | null = null;
     if (dto.videos?.results) {
@@ -137,6 +180,21 @@ export class Movie extends BaseEntity {
     const director =
       dto.credits?.crew?.find((person) => person.job === 'Director')?.name || null;
 
+    // Calcular estatus teatral si no viene explícito
+    let status: TheatricalStatus = theatricalInfo?.status || 'UNKNOWN';
+    if (!theatricalInfo && dto.release_date) {
+      const releaseTime = new Date(dto.release_date).getTime();
+      const now = Date.now();
+      const diffDays = (now - releaseTime) / (1000 * 3600 * 24);
+      if (releaseTime > now) {
+        status = 'UPCOMING';
+      } else if (diffDays <= 120) {
+        status = 'IN_THEATERS';
+      } else {
+        status = 'OUT_OF_THEATERS';
+      }
+    }
+
     return new Movie({
       id: dto.id,
       title: dto.title,
@@ -154,6 +212,9 @@ export class Movie extends BaseEntity {
       trailerKey,
       cast,
       director,
+      theatricalStatus: status,
+      peruReleaseDate: theatricalInfo?.peruReleaseDate || dto.release_date,
+      peruCertification: theatricalInfo?.peruCertification || '14',
     });
   }
 
@@ -172,6 +233,9 @@ export class Movie extends BaseEntity {
       budget: this.budget,
       revenue: this.revenue,
       trailerKey: this.trailerKey,
+      theatricalStatus: this.theatricalStatus,
+      peruReleaseDate: this.peruReleaseDate,
+      peruCertification: this.peruCertification,
       createdAt: this.createdAt.toISOString(),
     };
   }

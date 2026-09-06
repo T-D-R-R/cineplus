@@ -32,11 +32,12 @@ export class Showtime extends BaseEntity {
   }
 
   public getFormattedPrice(): string {
-    return new Intl.NumberFormat('es-CO', {
+    const val = this.price > 100 ? this.price / 1000 : this.price;
+    return new Intl.NumberFormat('es-PE', {
       style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
-    }).format(this.price);
+      currency: 'PEN',
+      minimumFractionDigits: 2,
+    }).format(val);
   }
 
   public static fromSupabaseRow(row: SupabaseShowtimeRow): Showtime {

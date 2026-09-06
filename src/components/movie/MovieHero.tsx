@@ -1,4 +1,4 @@
-import { Star, Clock, Calendar, Play, MapPin, DollarSign, Clapperboard } from 'lucide-react';
+import { Star, Clock, Calendar, Play, MapPin, DollarSign, Clapperboard, CheckCircle2, Ticket, Tv } from 'lucide-react';
 import { Movie } from '../../domain/Movie';
 
 interface MovieHeroProps {
@@ -8,6 +8,26 @@ interface MovieHeroProps {
 }
 
 export function MovieHero({ movie, onScrollToTrailer, onScrollToCinemas }: MovieHeroProps) {
+  const theatricalBadge = movie.getTheatricalBadge();
+
+  const badgeConfig = {
+    emerald: {
+      container: 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 shadow-emerald-500/10',
+      icon: <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />,
+      dot: 'bg-emerald-400',
+    },
+    sky: {
+      container: 'bg-sky-500/15 border-sky-500/40 text-sky-300 shadow-sky-500/10',
+      icon: <Ticket className="w-4 h-4 text-sky-400 shrink-0" />,
+      dot: 'bg-sky-400',
+    },
+    amber: {
+      container: 'bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-amber-500/10',
+      icon: <Tv className="w-4 h-4 text-amber-400 shrink-0" />,
+      dot: 'bg-amber-400',
+    },
+  }[theatricalBadge.color];
+
   return (
     <section className="relative rounded-3xl overflow-hidden border border-slate-800 shadow-2xl bg-slate-900">
       {/* Imagen Backdrop de Fondo con Degradado */}
@@ -43,6 +63,29 @@ export function MovieHero({ movie, onScrollToTrailer, onScrollToCinemas }: Movie
               <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
                 {movie.title}
               </h1>
+            </div>
+
+            {/* Badge de Verificación de Cartelera Teatral en Perú */}
+            <div className="flex justify-center lg:justify-start">
+              <div
+                className={`inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl border ${badgeConfig.container} backdrop-blur-sm shadow-lg`}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${badgeConfig.dot} opacity-75`} />
+                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${badgeConfig.dot}`} />
+                  </span>
+                  {badgeConfig.icon}
+                </div>
+                <div className="text-left">
+                  <p className="text-xs sm:text-sm font-extrabold tracking-wide uppercase">
+                    {theatricalBadge.label}
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-slate-300 font-medium">
+                    {theatricalBadge.sublabel}
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Badges y Metadatos */}

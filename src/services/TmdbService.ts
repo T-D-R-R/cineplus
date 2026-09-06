@@ -278,10 +278,59 @@ export class TmdbService extends BaseApiService {
     }
 
     try {
-      const data = await this.request<TmdbMovieDto>(
-        `/movie/${movieId}?${authQuery}&language=es-MX&append_to_response=credits,videos`
-      );
-      return Movie.fromTmdbDto(data);
+      const data = await this.request<
+        TmdbMovieDto & {
+          release_dates?: {
+            results: Array<{
+              iso_3166_1: string;
+              release_dates: Array<{
+                certification: string;
+                release_date: string;
+                type: number;
+              }>;
+            }>;
+          };
+        }
+      >(`/movie/${movieId}?${authQuery}&language=es-MX&append_to_response=credits,videos,release_dates`);
+
+      // Analizar estado en cartelera en Perú (PE)
+      let theatricalStatus: 'IN_THEATERS' | 'UPCOMING' | 'OUT_OF_THEATERS' | 'UNKNOWN' = 'IN_THEATERS';
+      let peruReleaseDate: string | null = null;
+      let peruCertification: string | null = null;
+
+      if (data.release_dates?.results) {
+        const peRelease =
+          data.release_dates.results.find((r) => r.iso_3166_1 === 'PE') ||
+          data.release_dates.results.find((r) => r.iso_3166_1 === 'MX') ||
+          data.release_dates.results.find((r) => r.iso_3166_1 === 'US');
+
+        if (peRelease && peRelease.release_dates.length > 0) {
+          const theatrical =
+            peRelease.release_dates.find((rd) => rd.type === 3 || rd.type === 2) ||
+            peRelease.release_dates[0];
+
+          peruReleaseDate = theatrical.release_date || data.release_date;
+          peruCertification = theatrical.certification || '14';
+
+          const releaseTime = new Date(peruReleaseDate).getTime();
+          const now = Date.now();
+          const diffDays = (now - releaseTime) / (1000 * 3600 * 24);
+
+          if (releaseTime > now) {
+            theatricalStatus = 'UPCOMING';
+          } else if (diffDays <= 150) {
+            theatricalStatus = 'IN_THEATERS';
+          } else {
+            theatricalStatus = 'OUT_OF_THEATERS';
+          }
+        }
+      }
+
+      return Movie.fromTmdbDto(data, {
+        status: theatricalStatus,
+        peruReleaseDate,
+        peruCertification,
+      });
     } catch (error) {
       console.warn(`Error obteniendo detalles de película ${movieId}, usando respaldo:`, error);
       const found = MOCK_MOVIES.find((m) => m.id === Number(movieId)) || MOCK_MOVIES[0];

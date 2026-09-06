@@ -45,6 +45,19 @@ export class Cinema extends BaseEntity {
     )}`;
   }
 
+  public getOfficialBillboardUrl(): string {
+    if (this.website) return this.website;
+    const lower = `${this.name} ${this.chain}`.toLowerCase();
+    if (lower.includes('cineplanet')) return 'https://www.cineplanet.com.pe';
+    if (lower.includes('cinemark')) return 'https://www.cinemark-peru.com';
+    if (lower.includes('cinestar') || lower.includes('cine star')) return 'https://www.cinestar.com.pe';
+    if (lower.includes('uvk')) return 'https://uvk.pe';
+    if (lower.includes('cinerama')) return 'https://www.cinerama.com.pe';
+    if (lower.includes('movie time') || lower.includes('movietime')) return 'https://www.movietime.com.pe';
+    if (lower.includes('cinepolis') || lower.includes('cinépolis')) return 'https://www.cinepolis.com.pe';
+    return `https://www.google.com/search?q=${encodeURIComponent(`${this.name} cartelera funciones entradas`)}`;
+  }
+
   public static fromSupabaseRow(row: SupabaseCinemaRow): Cinema {
     return new Cinema({
       id: row.id,
