@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- SEO Meta Tags -->
+  <title>CinePlus - La Mejor Pagina | Peliculas 2025</title>
+  <meta name="description" content="Descubre las mejores películas, estrenos y recomendaciones en CinePlus.">
+  <meta name="keywords" content="películas, cine, estrenos, catálogo, géneros, recomendaciones, top 10, ciencia ficción, drama">
+  <meta name="author" content="CinePlus">
+  <meta name="robots" content="index, follow">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cineplus.com/">
+  <meta property="og:title" content="CinePlus - El Mejor Catálogo de Películas Online">
+  <meta property="og:description" content="Descubre las mejores películas, estrenos y recomendaciones en CinePlus.">
+  <meta property="og:image" content="https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://cineplus.com/">
+  <meta property="twitter:title" content="CinePlus - El Mejor Catálogo de Películas Online">
+  <meta property="twitter:description" content="Descubre las mejores películas, estrenos y recomendaciones en CinePlus.">
+  <meta property="twitter:image" content="https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+  
+  <!-- Stylesheets -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+
+<!-- Barra de Navegación -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="Index.html"><i class="bi bi-film"></i> CinePlus</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+      aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="Index.html">Inicio</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="generos.html">Géneros</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="top10.html">Top 10</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="proximos-estrenos.html">Próximos Estrenos</a>
+        </li>
+      </ul>
+      
+
+    </div>
+  </div>
+</nav>
+
+<!-- HERO BANNER -->
+<div class="hero">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <h1 class="display-4 fw-bold mb-4">🎬 Descubre las Mejores Películas</h1>
+        <p class="lead mb-4">Explora miles de títulos, desde los últimos estrenos hasta clásicos atemporales. Encuentra tu próxima película favorita.</p>
+
+      </div>
+      <div class="col-lg-4 text-center">
+        <div class="hero-stats">
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="stat-card">
+                <h3 class="text-warning mb-0">10K+</h3>
+                <small class="text-light">Películas</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <h3 class="text-success mb-0">50K+</h3>
+                <small class="text-light">Usuarios</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <h3 class="text-info mb-0">100+</h3>
+                <small class="text-light">Géneros</small>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <h3 class="text-danger mb-0">24/7</h3>
+                <small class="text-light">Disponible</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN DESTACADOS -->
+<div class="container mt-5">
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card bg-gradient-primary border-0 h-100">
+        <div class="card-body text-center p-4">
+          <i class="bi bi-fire text-warning display-4 mb-3"></i>
+          <h4 class="card-title">🔥 Estrenos Calientes</h4>
+          <p class="card-text">Descubre las películas más esperadas y comentadas del momento.</p>
+          <a href="proximos-estrenos.html" class="btn btn-warning">Ver Estrenos</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-gradient-success border-0 h-100">
+        <div class="card-body text-center p-4">
+          <i class="bi bi-trophy text-warning display-4 mb-3"></i>
+          <h4 class="card-title">🏆 Top Recomendadas</h4>
+          <p class="card-text">Las mejores películas seleccionadas por nuestros expertos.</p>
+          <a href="top10.html" class="btn btn-success">Ver Top 10</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card bg-gradient-danger border-0 h-100">
+        <div class="card-body text-center p-4">
+          <i class="bi bi-collection-play text-warning display-4 mb-3"></i>
+          <h4 class="card-title">🎭 Explorar Géneros</h4>
+          <p class="card-text">Descubre películas organizadas por categorías y preferencias.</p>
+          <a href="generos.html" class="btn btn-danger">Explorar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN DE BÚSQUEDA AVANZADA -->
+<div class="container mt-4">
+  <div class="card bg-dark border-0">
+    <div class="card-body">
+      <h5 class="text-white mb-3"><i class="bi bi-search-heart"></i> Búsqueda Avanzada</h5>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <input type="text" class="form-control" id="advancedSearchTitle" placeholder="Título de la película...">
+        </div>
+        <div class="col-md-3">
+          <select class="form-select" id="advancedSearchGenre">
+            <option value="">Todos los géneros</option>
+            <option value="Acción">Acción</option>
+            <option value="Drama">Drama</option>
+            <option value="Comedia">Comedia</option>
+            <option value="Ciencia Ficción">Ciencia Ficción</option>
+            <option value="Terror">Terror</option>
+            <option value="Romance">Romance</option>
+            <option value="Thriller">Thriller</option>
+            <option value="Fantasía">Fantasía</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" id="advancedSearchYear">
+            <option value="">Año</option>
+            <option value="2024">2024</option>
+            <option value="2023">2023</option>
+            <option value="2022">2022</option>
+            <option value="2021">2021</option>
+            <option value="2020">2020</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select class="form-select" id="advancedSearchRating">
+            <option value="">Calificación</option>
+            <option value="5">5 estrellas</option>
+            <option value="4">4+ estrellas</option>
+            <option value="3">3+ estrellas</option>
+          </select>
+        </div>
+        <div class="col-md-1">
+          <button class="btn btn-primary w-100" id="advancedSearchBtn">
+            <i class="bi bi-search"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- RESULTADOS DE BÚSQUEDA -->
+      <div id="searchResultsContainer" class="mt-4" style="display: none;">
+        <h6 class="text-white mb-3">Resultados de búsqueda:</h6>
+        <div class="row g-3" id="searchResultsGrid">
+          <!-- Los resultados se cargarán aquí -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECCIÓN DE ESTRENOS -->
+<section class="container mt-5">
+    <h2 class="mb-4"><i class="bi bi-camera-reels"></i> Nuevos Estrenos</h2>
+    
+
+  <div class="row g-4">
+    <!-- Tarjeta 1: Dune -->
+    <div class="col-md-3">
+      <div class="card">
+        <a href="pelicula-dune.html" class="text-decoration-none" aria-label="Ver detalles de Dune">
+          <img src="https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg" 
+              class="card-img-top" 
+              alt="Poster de la película Dune (2021)" 
+              loading="lazy"
+              width="300"
+              height="450">
+          <div class="card-body">
+            <h5 class="card-title text-white">Dune</h5>
+            <p class="card-text">
+              <i class="bi bi-lightning-fill text-danger" aria-hidden="true"></i> Ciencia Ficción &nbsp; | &nbsp;
+              <i class="bi bi-calendar3" aria-hidden="true"></i> 2021
+            </p>
+            <small class="text-muted">Haz clic para ver detalles</small>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Tarjeta 2: The Batman -->
+    <div class="col-md-3">
+      <div class="card">
+        <img src="https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg" class="card-img-top" alt="The Batman">
+        <div class="card-body">
+          <h5 class="card-title">The Batman</h5>
+          <p class="card-text">
+            <i class="bi bi-lightning-fill text-danger"></i> Acción &nbsp; | &nbsp;
+            <i class="bi bi-calendar3"></i> 2022
+          </p>          
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta 3: Top Gun: Maverick -->
+    <div class="col-md-3">
+      <div class="card">
+        <img src="https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg" class="card-img-top" alt="Top Gun: Maverick">
+        <div class="card-body">
+          <h5 class="card-title">Top Gun: Maverick</h5>
+          <p class="card-text">
+            <i class="bi bi-lightning-fill text-danger"></i> Acción &nbsp; | &nbsp;
+            <i class="bi bi-calendar3"></i> 2022
+          </p>          
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta 4: Everything Everywhere All at Once -->
+    <div class="col-md-3">
+      <div class="card">
+        <img src="https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg" class="card-img-top" alt="Everything Everywhere All at Once">
+        <div class="card-body">
+          <h5 class="card-title">Todo en todas partes al mismo tiempo</h5>
+          <p class="card-text">
+            <i class="bi bi-lightning-fill text-danger"></i> Ciencia Ficción &nbsp; | &nbsp;
+            <i class="bi bi-calendar3"></i> 2022
+          </p>          
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- SECCIÓN DE PELÍCULAS POPULARES -->
+<section class="container mt-5">
+    <h2 class="mb-4"><i class="bi bi-star-fill text-warning"></i> Populares del Mes</h2>
+    <div class="row g-4">
+      
+      <!-- Tarjeta 1: Oppenheimer -->
+      <div class="col-md-3">
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg" class="card-img-top" alt="Oppenheimer">
+          <div class="card-body">
+            <h5 class="card-title">Oppenheimer</h5>
+            <p class="card-text">
+              <i class="bi bi-person-fill-lock text-warning"></i> Drama &nbsp; | &nbsp;
+              <i class="bi bi-calendar3 text-light"></i> 2023
+            </p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Tarjeta 2: Barbie -->
+      <div class="col-md-3">
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg" class="card-img-top" alt="Barbie">
+          <div class="card-body">
+            <h5 class="card-title">Barbie</h5>
+            <p class="card-text">
+              <i class="bi bi-emoji-smile-fill text-primary"></i> Comedia &nbsp; | &nbsp;
+              <i class="bi bi-calendar3 text-light"></i> 2023
+            </p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Tarjeta 3: Killers of the Flower Moon -->
+      <div class="col-md-3">
+        <div class="card">
+          <img src="images/killers-flower-moon.jpg" class="card-img-top" alt="Killers of the Flower Moon" loading="lazy">
+          <div class="card-body">
+            <h5 class="card-title">Los Asesinos de la Luna</h5>
+            <p class="card-text">
+              <i class="bi bi-bullseye text-danger"></i> Crimen &nbsp; | &nbsp;
+              <i class="bi bi-calendar3 text-light"></i> 2023
+            </p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Tarjeta 4: Poor Things -->
+      <div class="col-md-3">
+        <div class="card">
+          <img src="https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg" class="card-img-top" alt="Poor Things">
+          <div class="card-body">
+            <h5 class="card-title">Pobres Criaturas</h5>
+            <p class="card-text">
+              <i class="bi bi-stars text-primary"></i> Fantasía &nbsp; | &nbsp;
+              <i class="bi bi-calendar3 text-light"></i> 2023
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECCIÓN TOP 10 -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">🎬 Top 10 Recomendadas</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+      <!-- Tarjeta 1: Inception -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0 fade-in-card">
+          <img src="https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" class="card-img-top" alt="Inception">
+          <div class="card-body">
+            <h5 class="card-title">Inception</h5>
+            <p class="card-text">Un thriller que te dejará sin aliento hasta el último minuto.</p>
+            <p class="mb-0 text-warning">⭐ ⭐ ⭐ ⭐ ⭐</p>
+          </div>
+        </div>
+            </div>
+
+      <!-- Tarjeta 2: The Dark Knight -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0 fade-in-card">
+          <img src="https://image.tmdb.org/t/p/w500/qJ2tW6WMUDux911r6m7haRef0WH.jpg" class="card-img-top" alt="The Dark Knight">
+          <div class="card-body">
+            <h5 class="card-title">El Caballero Oscuro</h5>
+            <p class="card-text">Una historia de acción y decisiones imposibles.</p>
+            <p class="mb-0 text-warning">⭐ ⭐ ⭐ ⭐ ⭐</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta 3: Pulp Fiction -->
+      <div class="col">
+        <div class="card h-100 shadow-sm border-0 fade-in-card">
+          <img src="https://image.tmdb.org/t/p/w500/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg" class="card-img-top" alt="Pulp Fiction">
+          <div class="card-body">
+            <h5 class="card-title">Pulp Fiction</h5>
+            <p class="card-text">Drama psicológico con un giro inesperado.</p>
+            <p class="mb-0 text-warning">⭐ ⭐ ⭐ ⭐ ⭐</p>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+            </div>
+
+  <!-- SECCIÓN PRÓXIMOS ESTRENOS -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">🎞️ Próximos Estrenos</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+      <!-- Estreno 1: Deadpool & Wolverine -->
+      <div class="col">
+        <div class="card h-100 border-0 shadow fade-in-card">
+          <img src="images/deadpool.jpg" class="card-img-top" alt="Deadpool & Wolverine" loading="lazy">
+          <div class="card-body">
+            <h5 class="card-title">Deadpool & Wolverine</h5>
+            <span class="badge bg-danger mb-2">Acción</span>
+            <p class="card-text">Llega el 26 de julio la película más esperada del año.</p>
+            <span class="badge bg-warning text-dark">📅 26/07/2024</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estreno 2: Joker: Folie à Deux -->
+      <div class="col">
+        <div class="card h-100 border-0 shadow fade-in-card">
+          <img src="images/joker.jpg" class="card-img-top" alt="Joker: Folie à Deux" loading="lazy">
+          <div class="card-body">
+            <h5 class="card-title">Joker: Folie à Deux</h5>
+            <span class="badge bg-primary mb-2">Drama</span>
+            <p class="card-text">Una historia desgarradora que te hará reflexionar.</p>
+            <span class="badge bg-warning text-dark">📅 04/10/2024</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estreno 3: Dune: Part Two -->
+      <div class="col">
+        <div class="card h-100 border-0 shadow fade-in-card">
+          <img src="https://image.tmdb.org/t/p/w500/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg" class="card-img-top" alt="Dune: Part Two">
+          <div class="card-body">
+            <h5 class="card-title">Dune: Parte Dos</h5>
+            <span class="badge bg-success mb-2">Ciencia Ficción</span>
+            <p class="card-text">Una nueva era comienza en los confines del universo.</p>
+            <span class="badge bg-warning text-dark">📅 15/03/2024</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECCIÓN OPINIONES DE USUARIOS -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">💬 Opiniones de Usuarios</h2>
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+      <!-- Opinión 1 -->
+      <div class="col">
+        <div class="card h-100 shadow border-0 bg-dark text-white">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                <i class="bi bi-person-fill text-white"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Lucía Ramírez</h6>
+                <small class="text-info">Crítica de Cine</small>
+              </div>
+            </div>
+            <blockquote class="blockquote mb-0">
+              <p class="mb-3">"¡Me encantó 'Dune'! La fotografía es espectacular y la actuación de Timothée Chalamet es increíble. Una película que redefine la ciencia ficción."</p>
+              <div class="text-warning mb-2">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+              </div>
+              <footer class="blockquote-footer text-white-50">Hace 2 días</footer>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opinión 2 -->
+      <div class="col">
+        <div class="card h-100 shadow border-0 bg-dark text-white">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-success rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                <i class="bi bi-person-fill text-white"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Carlos Ortega</h6>
+                <small class="text-warning">Blogger Cinematográfico</small>
+              </div>
+            </div>
+            <blockquote class="blockquote mb-0">
+              <p class="mb-3">"'Oppenheimer' es una obra maestra. La dirección de Nolan y la actuación de Cillian Murphy son simplemente perfectas. Una película que te hace reflexionar."</p>
+              <div class="text-warning mb-2">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+              </div>
+              <footer class="blockquote-footer text-white-50">Hace 1 semana</footer>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opinión 3 -->
+      <div class="col">
+        <div class="card h-100 shadow border-0 bg-dark text-white">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center mb-3">
+              <div class="bg-danger rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                <i class="bi bi-person-fill text-white"></i>
+              </div>
+              <div>
+                <h6 class="mb-0">Ana Gutiérrez</h6>
+                <small class="text-info">Crítica de Arte</small>
+              </div>
+            </div>
+            <blockquote class="blockquote mb-0">
+              <p class="mb-3">"'Barbie' superó todas mis expectativas. Es divertida, inteligente y con un mensaje poderoso. Margot Robbie está brillante en su papel."</p>
+              <div class="text-warning mb-2">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star"></i>
+              </div>
+              <footer class="blockquote-footer text-white-50">Hace 3 días</footer>
+            </blockquote>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SECCIÓN FORMULARIO DE CONTACTO -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">📧 Contáctanos</h2>
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-0 bg-dark text-white">
+          <div class="card-body p-4">
+            <form id="contactForm" novalidate>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label for="nombre" class="form-label text-white">Nombre *</label>
+                  <input type="text" class="form-control bg-dark text-white border-secondary" id="nombre" name="nombre" placeholder="Tu nombre completo" required>
+                  <div class="invalid-feedback">
+                    Por favor ingresa tu nombre.
+                  </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label for="email" class="form-label text-white">Email *</label>
+                  <input type="email" class="form-control bg-dark text-white border-secondary" id="email" name="email" placeholder="tu@email.com" required>
+                  <div class="invalid-feedback">
+                    Por favor ingresa un email válido.
+                  </div>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="asunto" class="form-label text-white">Asunto *</label>
+                <select class="form-select bg-dark text-white border-secondary" id="asunto" name="asunto" required>
+                  <option value="">Selecciona un asunto</option>
+                  <option value="sugerencia">💡 Sugerencia</option>
+                  <option value="problema">⚠️ Reportar Problema</option>
+                  <option value="colaboracion">🤝 Colaboración</option>
+                  <option value="critica">⭐ Crítica de Película</option>
+                  <option value="otro">❓ Otro</option>
+                </select>
+                <div class="invalid-feedback">
+                  Por favor selecciona un asunto.
+                </div>
+              </div>
+              <div class="mb-3">
+                <label for="mensaje" class="form-label text-white">Mensaje *</label>
+                <textarea class="form-control bg-dark text-white border-secondary" id="mensaje" name="mensaje" rows="5" placeholder="Escribe tu mensaje aquí..." required></textarea>
+                <div class="invalid-feedback">
+                  Por favor ingresa tu mensaje.
+                </div>
+              </div>
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="bi bi-send me-2"></i>Enviar Mensaje
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ALERTA DE ÉXITO (oculta por defecto) -->
+  <div class="alert alert-success mt-3 text-center" id="successAlert" role="alert" style="display: none;">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    ¡Tu mensaje ha sido enviado con éxito! 🎉 Nos pondremos en contacto contigo pronto.
+  </div>
+
+  <!-- SECCIÓN SOBRE ESTA PÁGINA -->
+  <div class="container mt-5 mb-5">
+    <h2 class="text-center mb-4">🎬 Sobre esta página</h2>
+    <p class="lead text-center text-white">
+      Esta página fue creada como parte de un proyecto educativo para aprender a diseñar sitios web usando HTML, CSS y Bootstrap. Aquí se muestra una galería de películas con estilos modernos, secciones temáticas, opiniones de usuarios y formularios interactivos.
+    </p>
+    <p class="text-center text-white">
+      <strong>Desarrollado por [Ricra Rojas Teofilo]</strong> – 2025
+    </p>
+  </div>
+
+  <!-- Pie de Página -->
+  <footer class="bg-dark text-white text-center py-4 mt-5">
+    <div class="container">
+      <p class="mb-3">&copy; 2025 CinePlus. Todos los derechos reservados.</p>
+      <div class="d-flex justify-content-center gap-4">
+        <a href="https://www.facebook.com" target="_blank" class="text-white text-decoration-none hover-effect">
+          <i class="bi bi-facebook fs-4"></i>
+          <span class="ms-1">Facebook</span>
+        </a>
+        <a href="https://www.instagram.com" target="_blank" class="text-white text-decoration-none hover-effect">
+          <i class="bi bi-instagram fs-4"></i>
+          <span class="ms-1">Instagram</span>
+        </a>
+        <a href="mailto:contacto@cineplus.com" class="text-white text-decoration-none hover-effect">
+          <i class="bi bi-envelope fs-4"></i>
+          <span class="ms-1">Email</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" defer></script>
+  
+
+  
+  <script>
+    // Función de búsqueda avanzada
+    function initAdvancedSearch() {
+      console.log('Inicializando búsqueda avanzada...');
+      
+      const advancedSearchTitle = document.getElementById('advancedSearchTitle');
+      const advancedSearchGenre = document.getElementById('advancedSearchGenre');
+      const advancedSearchYear = document.getElementById('advancedSearchYear');
+      const advancedSearchRating = document.getElementById('advancedSearchRating');
+      const advancedSearchBtn = document.getElementById('advancedSearchBtn');
+      const searchResultsContainer = document.getElementById('searchResultsContainer');
+      const searchResultsGrid = document.getElementById('searchResultsGrid');
+
+      // Base de datos de películas
+      const peliculasDB = [
+        {
+          id: 1,
+          titulo: 'Dune',
+          genero: 'Ciencia Ficción',
+          año: '2021',
+          calificacion: 5,
+          imagen: 'https://image.tmdb.org/t/p/w500/d5NXSklXo0qyIYkgV94XAgMIckC.jpg',
+          descripcion: 'Paul Atreides, un joven brillante y talentoso nacido con un destino más allá de su comprensión...'
+        },
+        {
+          id: 2,
+          titulo: 'The Batman',
+          genero: 'Acción',
+          año: '2022',
+          calificacion: 5,
+          imagen: 'https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg',
+          descripcion: 'En su segundo año luchando contra el crimen, Batman explora la corrupción de Gotham City...'
+        },
+        {
+          id: 3,
+          titulo: 'Top Gun: Maverick',
+          genero: 'Acción',
+          año: '2022',
+          calificacion: 5,
+          imagen: 'https://image.tmdb.org/t/p/w500/62HCnUTziyWcpDaBO2i1DX17ljH.jpg',
+          descripcion: 'Después de más de treinta años de servicio como uno de los mejores aviadores de la Marina...'
+        },
+        {
+          id: 4,
+          titulo: 'Everything Everywhere All at Once',
+          genero: 'Ciencia Ficción',
+          año: '2022',
+          calificacion: 5,
+          imagen: 'https://image.tmdb.org/t/p/w500/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg',
+          descripcion: 'Una mujer china inmigrante se ve envuelta en una aventura salvaje donde solo ella puede salvar el mundo...'
+        },
+        {
+          id: 5,
+          titulo: 'Oppenheimer',
+          genero: 'Drama',
+          año: '2023',
+          calificacion: 5,
+          imagen: 'https://image.tmdb.org/t/p/w500/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg',
+          descripcion: 'La historia del científico estadounidense J. Robert Oppenheimer y su papel en el desarrollo de la bomba atómica.'
+        },
+        {
+          id: 6,
+          titulo: 'Barbie',
+          genero: 'Comedia',
+          año: '2023',
+          calificacion: 4,
+          imagen: 'https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg',
+          descripcion: 'Barbie sufre una crisis existencial y comienza a cuestionar su mundo y su existencia.'
+        },
+        {
+          id: 7,
+          titulo: 'Poor Things',
+          genero: 'Fantasía',
+          año: '2023',
+          calificacion: 5,
+          imagen: 'https://image.tmdb.org/t/p/w500/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg',
+          descripcion: 'Una joven mujer es resucitada por un brillante y poco ortodoxo científico.'
+        },
+        {
+          id: 8,
+          titulo: 'Killers of the Flower Moon',
+          genero: 'Drama',
+          año: '2023',
+          calificacion: 4,
+          imagen: 'images/killers-flower-moon.jpg',
+          descripcion: 'La historia real de los asesinatos de los Osage en Oklahoma en la década de 1920.'
+        },
+        {
+          id: 9,
+          titulo: 'The Menu',
+          genero: 'Thriller',
+          año: '2022',
+          calificacion: 4,
+          imagen: 'images/menu.jpg',
+          descripcion: 'Una pareja viaja a una isla remota para cenar en un restaurante exclusivo.'
+        },
+        {
+          id: 10,
+          titulo: 'Avatar: The Way of Water',
+          genero: 'Ciencia Ficción',
+          año: '2022',
+          calificacion: 4,
+          imagen: 'https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg',
+          descripcion: 'Jake Sully vive con su nueva familia formada en el planeta que ha hecho su hogar.'
+        }
+      ];
+
+      // Función de búsqueda avanzada
+      function buscarAvanzada() {
+        console.log('Función buscarAvanzada ejecutada');
+        const titulo = advancedSearchTitle.value.toLowerCase();
+        const genero = advancedSearchGenre.value;
+        const año = advancedSearchYear.value;
+        const calificacion = parseInt(advancedSearchRating.value);
+        
+        console.log('Valores de búsqueda:', { titulo, genero, año, calificacion });
+
+        const resultados = peliculasDB.filter(pelicula => {
+          let coincide = true;
+
+          if (titulo && !pelicula.titulo.toLowerCase().includes(titulo)) {
+            coincide = false;
+          }
+
+          if (genero && pelicula.genero !== genero) {
+            coincide = false;
+          }
+
+          if (año && pelicula.año !== año) {
+            coincide = false;
+          }
+
+          if (calificacion && pelicula.calificacion < calificacion) {
+            coincide = false;
+          }
+
+          return coincide;
+        });
+        
+        console.log('Resultados encontrados:', resultados.length);
+        mostrarResultadosAvanzados(resultados);
+      }
+
+      // Mostrar resultados avanzados
+      function mostrarResultadosAvanzados(resultados) {
+        searchResultsContainer.style.display = 'block';
+        
+        if (resultados.length === 0) {
+          searchResultsGrid.innerHTML = `
+            <div class="col-12 text-center">
+              <div class="alert alert-info">
+                <i class="bi bi-search me-2"></i>
+                No se encontraron películas con los criterios especificados.
+              </div>
+            </div>
+          `;
+        } else {
+          searchResultsGrid.innerHTML = resultados.map(pelicula => `
+            <div class="col-md-3">
+              <div class="card h-100">
+                <img src="${pelicula.imagen}" class="card-img-top" alt="${pelicula.titulo}" onerror="this.src='https://via.placeholder.com/300x450/2c3e50/ffffff?text=${encodeURIComponent(pelicula.titulo)}'">
+                <div class="card-body">
+                  <h6 class="card-title">${pelicula.titulo}</h6>
+                  <p class="card-text small">
+                    <i class="bi bi-film text-primary"></i> ${pelicula.genero} &nbsp; | &nbsp;
+                    <i class="bi bi-calendar3"></i> ${pelicula.año}
+                  </p>
+                  <div class="text-warning small">
+                    ${'⭐'.repeat(pelicula.calificacion)}
+                  </div>
+                  <a href="${pelicula.titulo === 'Dune' ? 'pelicula-dune.html' : '#'}" class="btn btn-sm btn-primary mt-2">Ver detalles</a>
+                </div>
+              </div>
+            </div>
+          `).join('');
+        }
+      }
+
+      // Event listener para el botón de búsqueda
+      if (advancedSearchBtn) {
+        advancedSearchBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          console.log('Botón de búsqueda clickeado');
+          buscarAvanzada();
+        });
+      } else {
+        console.error('No se encontró el botón de búsqueda avanzada');
+      }
+    }
+
+    // Inicializar cuando el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAdvancedSearch);
+    } else {
+      initAdvancedSearch();
+    }
+
+    // Animaciones de tarjetas
+    const cards = document.querySelectorAll('.fade-in-card');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('show');
+        }
+      });
+    });
+
+    cards.forEach(card => {
+      observer.observe(card);
+    });
+
+    // Formulario de contacto
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('contactForm');
+      const alertSuccess = document.querySelector('.alert-success');
+      
+      // Ocultar alerta inicialmente
+      if (alertSuccess) {
+        alertSuccess.style.display = 'none';
+      }
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Validación del formulario
+        if (!form.checkValidity()) {
+          e.stopPropagation();
+          form.classList.add('was-validated');
+          return;
+        }
+
+        // Simular envío exitoso
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        
+        // Cambiar texto del botón
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Enviando...';
+        submitBtn.disabled = true;
+
+        // Simular delay de envío
+        setTimeout(() => {
+          // Mostrar alerta de éxito
+          if (alertSuccess) {
+            alertSuccess.style.display = 'block';
+            alertSuccess.scrollIntoView({ behavior: 'smooth' });
+          }
+
+          // Resetear formulario
+          form.reset();
+          form.classList.remove('was-validated');
+          
+          // Restaurar botón
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+
+          // Ocultar alerta después de 5 segundos
+          setTimeout(() => {
+            if (alertSuccess) {
+              alertSuccess.style.display = 'none';
+            }
+          }, 5000);
+        }, 2000);
+      });
+
+      // Mejorar experiencia del formulario de contacto
+      const contactForm = document.getElementById('contactForm');
+      const successAlert = document.getElementById('successAlert');
+
+      if (contactForm) {
+        // Agregar efectos visuales a los campos
+        const inputs = contactForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+          input.addEventListener('focus', function() {
+            this.classList.add('border-primary');
+            this.classList.remove('border-secondary');
+          });
+          
+          input.addEventListener('blur', function() {
+            if (!this.value) {
+              this.classList.remove('border-primary');
+              this.classList.add('border-secondary');
+            }
+          });
+        });
+      }
+
+
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,533 @@
+body {
+    background-color: #0d1117;
+    color: white;
+  }
+  
+  .navbar {
+    background-color: #161b22;
+  }
+  
+  .hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 500px;
+    display: flex;
+    align-items: center;
+    color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('https://image.tmdb.org/t/p/original/d5NXSklXo0qyIYkgV94XAgMIckC.jpg') no-repeat center center/cover;
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.hero .container {
+  position: relative;
+  z-index: 2;
+  }
+  
+  .hero h1 {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin-bottom: 1rem;
+}
+
+.hero .lead {
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  font-size: 1.2rem;
+}
+
+.hero-stats {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 15px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.stat-card h3 {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.stat-card small {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+/* Estilos para las tarjetas de destacados */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.bg-gradient-info {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.bg-gradient-danger {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #feca57 0%, #ff9ff3 100%);
+}
+
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+}
+
+.bg-gradient-pink {
+  background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+}
+
+.card.bg-gradient-primary,
+.card.bg-gradient-success,
+.card.bg-gradient-info {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card.bg-gradient-primary:hover,
+.card.bg-gradient-success:hover,
+.card.bg-gradient-info:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  }
+  
+  .card {
+    background-color: #21262d;
+    border: none;
+  }
+  
+  .card-title,
+  .card-text {
+    color: white;
+  }
+  
+  footer {
+    background-color: #161b22;
+    color: #aaa;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  footer a:hover {
+    color: #0d6efd; /* Azul Bootstrap al pasar el mouse */
+    transition: 0.3s ease;
+  }
+  
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.card img {
+  transition: transform 0.3s ease;
+}
+
+.card:hover img {
+  transform: scale(1.05);
+}
+
+.btn-animado {
+  transition: transform 0.3s ease;
+}
+
+.btn-animado:hover {
+  transform: scale(1.1);
+}
+
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.fade-in-card {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+}
+
+.fade-in-card.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Estilos para el formulario de contacto */
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-control.is-invalid,
+.form-select.is-invalid {
+  border-color: #dc3545;
+}
+
+.form-control.is-valid,
+.form-select.is-valid {
+  border-color: #198754;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Animación para el botón de envío */
+.btn-primary {
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+/* Estilos para el sistema de filtros */
+.pelicula-card {
+  transition: all 0.3s ease;
+}
+
+.pelicula-card.fade-in {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.no-resultados {
+  margin-top: 2rem;
+}
+
+.no-resultados .alert {
+  background-color: rgba(13, 202, 240, 0.1);
+  border-color: rgba(13, 202, 240, 0.3);
+  color: #0dcaf0;
+}
+
+/* Animación para las tarjetas filtradas */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos para los filtros */
+.form-select:focus {
+  border-color: #0dcaf0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 202, 240, 0.25);
+}
+
+.btn-outline-light:hover {
+  background-color: #f8f9fa;
+  color: #212529;
+  border-color: #f8f9fa;
+}
+
+/* Estilos para páginas de películas individuales */
+.hero-pelicula {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-pelicula::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(0,0,0,0.8), rgba(0,0,0,0.4));
+  z-index: 1;
+}
+
+.hero-pelicula .container {
+  position: relative;
+  z-index: 2;
+}
+
+/* Efectos hover para tarjetas con enlaces */
+.card a {
+  transition: all 0.3s ease;
+}
+
+.card a:hover {
+  transform: translateY(-5px);
+  text-decoration: none;
+}
+
+.card a:hover .card-title {
+  color: #0dcaf0 !important;
+}
+
+/* Estilos para el reparto */
+.card .rounded-circle {
+  object-fit: cover;
+}
+
+/* Estilos para críticas */
+.card .text-warning {
+  font-size: 0.9rem;
+}
+
+/* Estilos para películas similares */
+.card.bg-secondary {
+  transition: transform 0.3s ease;
+}
+
+.card.bg-secondary:hover {
+  transform: scale(1.05);
+}
+
+/* Responsive para hero de película */
+@media (max-width: 768px) {
+  .hero-pelicula {
+    height: 50vh !important;
+  }
+  
+  .hero-pelicula .display-4 {
+    font-size: 2rem;
+  }
+  
+  .hero-pelicula .lead {
+    font-size: 1rem;
+  }
+}
+
+/* Estilos para el sistema de búsqueda */
+.dropdown-menu {
+  background-color: #21262d;
+  border: 1px solid #30363d;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
+
+.dropdown-item {
+  color: #f0f6fc;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #30363d;
+  color: #58a6ff;
+}
+
+.dropdown-item img {
+  border-radius: 4px;
+}
+
+/* Estilos para la búsqueda avanzada */
+#searchResultsContainer {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos para los resultados de búsqueda */
+#searchResultsGrid .card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#searchResultsGrid .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
+
+/* Responsive para la barra de búsqueda */
+@media (max-width: 768px) {
+  .navbar .d-flex {
+    width: 100%;
+    margin-top: 1rem;
+  }
+  
+  #searchResults {
+    width: 100% !important;
+    left: 0 !important;
+  }
+}
+
+/* Estilos para el input de búsqueda */
+#searchInput:focus {
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 0.25rem rgba(88, 166, 255, 0.25);
+}
+
+/* Animación para los resultados */
+.dropdown-item {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus styles for better accessibility */
+a:focus,
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #58a6ff;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    border: 2px solid #ffffff;
+  }
+  
+  .text-muted {
+    color: #ffffff !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .navbar,
+  .hero,
+  footer,
+  .btn {
+    display: none !important;
+  }
+  
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .card {
+    border: 1px solid black !important;
+    background: white !important;
+  }
+}
+
+/* Performance optimizations */
+.lazy {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.lazy.loaded {
+  opacity: 1;
+}
+
+/* Skip to content link for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: #000;
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  z-index: 1000;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Estilos para enlaces de redes sociales */
+.hover-effect {
+  transition: all 0.3s ease;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.hover-effect:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  color: #fff !important;
+  text-decoration: none;
+}
+
+.hover-effect i {
+  transition: transform 0.3s ease;
+}
+
+.hover-effect:hover i {
+  transform: scale(1.2);
+}
+
+/* Estilos específicos para cada red social */
+.hover-effect:hover .bi-facebook {
+  color: #1877f2;
+}
+
+.hover-effect:hover .bi-instagram {
+  background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hover-effect:hover .bi-envelope {
+  color: #ea4335;
+}
