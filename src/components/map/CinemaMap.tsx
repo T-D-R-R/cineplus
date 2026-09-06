@@ -185,7 +185,7 @@ export function CinemaMap({
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Ticket className="w-3 h-3 text-amber-400" />
-                      <span>Ver Cartelera</span>
+                      <span>Comprar Entradas</span>
                       <ExternalLink className="w-2.5 h-2.5" />
                     </a>
 

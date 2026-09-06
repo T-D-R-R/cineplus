@@ -122,9 +122,15 @@ export function useCinemas(tmdbMovieId: number | string | undefined) {
       // Ordenar por cercanía (el más cercano al usuario primero)
       cinemaListWithShowtimes.sort((a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0));
 
-      setCinemasWithShowtimes(cinemaListWithShowtimes);
-      if (cinemaListWithShowtimes.length > 0) {
-        setSelectedCinema(cinemaListWithShowtimes[0].cinema);
+      // Filtrar sedes regionales relevantes (máximo a 250 km para no mostrar ciudades lejanas como Tacna o Cusco)
+      const nearbyRegional = cinemaListWithShowtimes.filter((c) => (c.distanceKm ?? 9999) <= 250);
+      const finalList = nearbyRegional.length > 0
+        ? nearbyRegional.slice(0, 4)
+        : cinemaListWithShowtimes.slice(0, 2);
+
+      setCinemasWithShowtimes(finalList);
+      if (finalList.length > 0) {
+        setSelectedCinema(finalList[0].cinema);
       }
     } catch (err: unknown) {
       console.error('Error en useCinemas:', err);

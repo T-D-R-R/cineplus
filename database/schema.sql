@@ -2,7 +2,7 @@
 -- PROYECTO: CinePlus - Plataforma Web Jamstack
 -- BASE DE DATOS: Supabase (PostgreSQL 15+)
 -- ARCHIVO: database/schema.sql
--- DESCRIPCIÓN: Estructura relacional, índices B-Tree, políticas RLS y datos semilla.
+-- DESCRIPCIÓN: Estructura relacional, índices B-Tree, políticas RLS y datos semilla peruanos.
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
@@ -13,14 +13,14 @@ DROP TABLE IF EXISTS funciones CASCADE;
 DROP TABLE IF EXISTS cines CASCADE;
 
 -- ------------------------------------------------------------------------------
--- 2. TABLA: cines (Sedes físicas con geolocalización para Google Maps)
+-- 2. TABLA: cines (Sedes físicas reales de Perú con geolocalización satelital)
 -- ------------------------------------------------------------------------------
 CREATE TABLE cines (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(120) NOT NULL,
     cadena VARCHAR(60) NOT NULL,
     direccion VARCHAR(250) NOT NULL,
-    ciudad VARCHAR(100) DEFAULT 'Bogotá',
+    ciudad VARCHAR(100) DEFAULT 'Huánuco',
     latitud NUMERIC(10, 6) NOT NULL,
     longitud NUMERIC(10, 6) NOT NULL,
     telefono VARCHAR(30),
@@ -29,17 +29,17 @@ CREATE TABLE cines (
 );
 
 -- ------------------------------------------------------------------------------
--- 3. TABLA: funciones (Cartelera, salas y horarios por película de TMDb)
+-- 3. TABLA: funciones (Cartelera, salas y horarios por película de TMDb en Soles)
 -- ------------------------------------------------------------------------------
 CREATE TABLE funciones (
     id SERIAL PRIMARY KEY,
     tmdb_movie_id INT NOT NULL,                  -- ID oficial de la película en TMDb
     cine_id INT NOT NULL REFERENCES cines(id) ON DELETE CASCADE,
     hora VARCHAR(10) NOT NULL,                   -- Ej: '16:30', '19:00', '21:45'
-    sala VARCHAR(60) DEFAULT 'Sala Estándar',    -- Ej: 'Sala IMAX', 'Sala 3D Macro'
+    sala VARCHAR(60) DEFAULT 'Sala Estándar',    -- Ej: 'Sala Xtreme', 'Sala XD 3D'
     formato VARCHAR(20) DEFAULT '2D',            -- '2D', '3D', 'IMAX', '4DX'
     idioma VARCHAR(30) DEFAULT 'Doblada',        -- 'Doblada', 'Subtitulada', 'Original'
-    precio NUMERIC(8, 2) DEFAULT 18000.00,       -- Precio en moneda local
+    precio NUMERIC(8, 2) DEFAULT 22.00,          -- Precio en Soles Peruanos (S/.)
     creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -67,12 +67,11 @@ CREATE INDEX idx_cines_coords ON cines(latitud, longitud);
 -- ------------------------------------------------------------------------------
 -- 6. SEGURIDAD: ROW LEVEL SECURITY (RLS)
 -- ------------------------------------------------------------------------------
--- Habilitación de RLS en todas las entidades
 ALTER TABLE cines ENABLE ROW LEVEL SECURITY;
 ALTER TABLE funciones ENABLE ROW LEVEL SECURITY;
 ALTER TABLE resenas ENABLE ROW LEVEL SECURITY;
 
--- Políticas de lectura pública (Cualquier visitante anónimo puede ver cines, funciones y críticas)
+-- Políticas de lectura pública (Cualquier visitante puede ver cines, funciones y críticas)
 CREATE POLICY "Lectura publica de cines" 
 ON cines FOR SELECT 
 USING (true);
@@ -85,7 +84,7 @@ CREATE POLICY "Lectura publica de resenas"
 ON resenas FOR SELECT 
 USING (true);
 
--- Política de inserción pública de críticas (Visitantes pueden opinar con validación)
+-- Política de inserción pública de críticas con validación estricta
 CREATE POLICY "Insercion publica de resenas validada" 
 ON resenas FOR INSERT 
 WITH CHECK (
@@ -95,106 +94,147 @@ WITH CHECK (
 );
 
 -- ------------------------------------------------------------------------------
--- 7. DATOS SEMILLA: CINES REALES CON COORDENADAS GPS
+-- 7. DATOS SEMILLA: CINES REALES DE PERÚ (Huánuco, Huancayo, Tacna, Lima)
 -- ------------------------------------------------------------------------------
-INSERT INTO cines (nombre, cadena, direccion, ciudad, latitud, longitud, telefono, sitio_web) VALUES
+INSERT INTO cines (id, nombre, cadena, direccion, ciudad, latitud, longitud, telefono, sitio_web) VALUES
 (
-    'Cine Colombia Titán Plaza', 
-    'Cine Colombia', 
-    'Av. Boyacá # 80-94, C.C. Titán Plaza', 
-    'Bogotá', 
-    4.695780, 
-    -74.086430, 
-    '+57 601 7420101', 
-    'https://www.cinecolombia.com'
+    1,
+    'Cineplanet Real Plaza Huánuco', 
+    'Cineplanet', 
+    'Jr. Dos de Mayo 1380, C.C. Real Plaza', 
+    'Huánuco', 
+    -9.919142, 
+    -76.240990, 
+    '+51 1 624 9500', 
+    'https://www.cineplanet.com.pe'
 ),
 (
-    'Cinépolis Gran Estación', 
-    'Cinépolis', 
-    'Calle 26 # 62-47, C.C. Gran Estación', 
-    'Bogotá', 
-    4.646840, 
-    -74.103970, 
-    '+57 601 5936300', 
-    'https://www.cinepolis.com.co'
-),
-(
-    'Cinemark Multiplaza', 
+    2,
+    'Cinemark Open Plaza Huánuco', 
     'Cinemark', 
-    'Av. Boyacá # 13-05, C.C. Multiplaza', 
-    'Bogotá', 
-    4.652150, 
-    -74.128790, 
-    '+57 601 7443462', 
-    'https://www.cinemark.com.co'
+    'Jr. 2 de Mayo 125, C.C. Open Plaza', 
+    'Huánuco', 
+    -9.938460, 
+    -76.247630, 
+    '+51 1 610 0800', 
+    'https://www.cinemark-peru.com'
 ),
 (
-    'Cine Colombia Unicentro', 
-    'Cine Colombia', 
-    'Av. 15 # 124-30, C.C. Unicentro', 
-    'Bogotá', 
-    4.702580, 
-    -74.041690, 
-    '+57 601 7420101', 
-    'https://www.cinecolombia.com'
+    3,
+    'Cineplanet Real Plaza Huancayo', 
+    'Cineplanet', 
+    'Av. Ferrocarril 1035, Huancayo', 
+    'Huancayo', 
+    -12.067120, 
+    -75.210340, 
+    '+51 1 624 9500', 
+    'https://www.cineplanet.com.pe'
 ),
 (
-    'Cinépolis Plaza Central', 
-    'Cinépolis', 
-    'Carrera 65 # 11-50, C.C. Plaza Central', 
-    'Bogotá', 
-    4.632410, 
-    -74.116520, 
-    '+57 601 5936300', 
-    'https://www.cinepolis.com.co'
+    4,
+    'Cinemark Mall Aventura Huancayo', 
+    'Cinemark', 
+    'Av. Ferrocarril con Jr. San Carlos, Huancayo', 
+    'Huancayo', 
+    -12.052410, 
+    -75.228140, 
+    '+51 1 610 0800', 
+    'https://www.cinemark-peru.com'
+),
+(
+    5,
+    'Cineplanet Tacna', 
+    'Cineplanet', 
+    'Av. Prolongación Pinto 1300, Tacna', 
+    'Tacna', 
+    -18.018442, 
+    -70.252969, 
+    '+51 1 624 9500', 
+    'https://www.cineplanet.com.pe'
+),
+(
+    6,
+    'Cinestar Tacna', 
+    'Cine Star', 
+    'Av. Bolognesi 780, Tacna', 
+    'Tacna', 
+    -18.013695, 
+    -70.237107, 
+    '+51 1 719 0900', 
+    'https://www.cinestar.com.pe'
+),
+(
+    7,
+    'Cineplanet San Miguel', 
+    'Cineplanet', 
+    'Av. La Marina 2000, San Miguel', 
+    'Lima', 
+    -12.076800, 
+    -77.081500, 
+    '+51 1 624 9500', 
+    'https://www.cineplanet.com.pe'
+),
+(
+    8,
+    'Cinemark Jockey Plaza', 
+    'Cinemark', 
+    'Av. Javier Prado Este 4200, Surco', 
+    'Lima', 
+    -12.084910, 
+    -76.975748, 
+    '+51 1 610 0800', 
+    'https://www.cinemark-peru.com'
 );
 
+-- Reiniciar la secuencia de ID de cines
+SELECT setval('cines_id_seq', (SELECT MAX(id) FROM cines));
+
 -- ------------------------------------------------------------------------------
--- 8. DATOS SEMILLA: FUNCIONES (Vinculadas a IDs reales de TMDb)
+-- 8. DATOS SEMILLA: FUNCIONES EN SOLES PERUANOS (S/.)
 -- ------------------------------------------------------------------------------
 -- Película: Dune Parte 1 (TMDb ID: 438631)
 INSERT INTO funciones (tmdb_movie_id, cine_id, hora, sala, formato, idioma, precio) VALUES
-(438631, 1, '15:00', 'Sala IMAX Mega', 'IMAX', 'Subtitulada', 24000.00),
-(438631, 1, '18:30', 'Sala IMAX Mega', 'IMAX', 'Subtitulada', 24000.00),
-(438631, 1, '21:45', 'Sala 2 General', '2D', 'Doblada', 17000.00),
-(438631, 2, '16:00', 'Sala 4 MacroXE', '2D', 'Subtitulada', 21000.00),
-(438631, 2, '19:30', 'Sala VIP 1', '2D', 'Subtitulada', 32000.00),
-(438631, 3, '17:15', 'Sala XD 3D', '3D', 'Doblada', 22000.00);
+(438631, 1, '15:00', 'Sala Xtreme', '2D', 'Doblada', 22.00),
+(438631, 1, '18:30', 'Sala Xtreme', '3D', 'Subtitulada', 26.00),
+(438631, 1, '21:45', 'Sala 2 General', '2D', 'Doblada', 18.00),
+(438631, 2, '16:00', 'Sala XD', '2D', 'Subtitulada', 24.00),
+(438631, 2, '19:30', 'Sala Premier', '2D', 'Subtitulada', 28.00),
+(438631, 5, '17:15', 'Sala 1', '2D', 'Doblada', 18.00);
 
 -- Película: Dune Parte 2 (TMDb ID: 693134)
 INSERT INTO funciones (tmdb_movie_id, cine_id, hora, sala, formato, idioma, precio) VALUES
-(693134, 1, '14:30', 'Sala IMAX Mega', 'IMAX', 'Subtitulada', 26000.00),
-(693134, 1, '18:00', 'Sala IMAX Mega', 'IMAX', 'Subtitulada', 26000.00),
-(693134, 1, '21:30', 'Sala IMAX Mega', 'IMAX', 'Subtitulada', 26000.00),
-(693134, 2, '16:45', 'Sala 1', '2D', 'Doblada', 18000.00),
-(693134, 2, '20:15', 'Sala VIP 2', '2D', 'Subtitulada', 34000.00),
-(693134, 4, '15:30', 'Sala Dinamix 4D', '4DX', 'Subtitulada', 28000.00),
-(693134, 4, '19:00', 'Sala Dinamix 4D', '4DX', 'Subtitulada', 28000.00);
+(693134, 1, '14:30', 'Sala Xtreme', '2D', 'Doblada', 24.00),
+(693134, 1, '18:00', 'Sala Xtreme', '3D', 'Subtitulada', 28.00),
+(693134, 1, '21:30', 'Sala 3', '2D', 'Subtitulada', 20.00),
+(693134, 2, '16:45', 'Sala XD', '2D', 'Doblada', 24.00),
+(693134, 2, '20:15', 'Sala XD 3D', '3D', 'Subtitulada', 29.00),
+(693134, 5, '15:30', 'Sala 2', '2D', 'Doblada', 19.00),
+(693134, 6, '19:00', 'Sala Star', '2D', 'Subtitulada', 16.00);
 
 -- Película: Inside Out 2 / Intensamente 2 (TMDb ID: 1022789)
 INSERT INTO funciones (tmdb_movie_id, cine_id, hora, sala, formato, idioma, precio) VALUES
-(1022789, 2, '13:00', 'Sala Junior', '2D', 'Doblada', 16000.00),
-(1022789, 2, '15:20', 'Sala Junior', '2D', 'Doblada', 16000.00),
-(1022789, 2, '17:40', 'Sala 3 MacroXE', '3D', 'Doblada', 20000.00),
-(1022789, 3, '14:15', 'Sala 2', '2D', 'Doblada', 15000.00),
-(1022789, 3, '16:30', 'Sala 2', '2D', 'Doblada', 15000.00),
-(1022789, 5, '15:00', 'Sala 1', '2D', 'Doblada', 15000.00),
-(1022789, 5, '17:15', 'Sala 1', '2D', 'Doblada', 15000.00);
+(1022789, 1, '13:00', 'Sala 1', '2D', 'Doblada', 18.00),
+(1022789, 1, '15:20', 'Sala 1', '2D', 'Doblada', 18.00),
+(1022789, 1, '17:40', 'Sala 2', '3D', 'Doblada', 22.00),
+(1022789, 2, '14:15', 'Sala 3', '2D', 'Doblada', 18.00),
+(1022789, 2, '16:30', 'Sala 3', '2D', 'Doblada', 18.00),
+(1022789, 5, '15:00', 'Sala 1', '2D', 'Doblada', 17.00),
+(1022789, 6, '17:15', 'Sala 2', '2D', 'Doblada', 15.00);
 
 -- Película: Deadpool & Wolverine (TMDb ID: 533535)
 INSERT INTO funciones (tmdb_movie_id, cine_id, hora, sala, formato, idioma, precio) VALUES
-(533535, 1, '16:20', 'Sala 3', '2D', 'Doblada', 18000.00),
-(533535, 1, '19:10', 'Sala 3', '2D', 'Subtitulada', 18000.00),
-(533535, 1, '22:00', 'Sala 3', '2D', 'Subtitulada', 18000.00),
-(533535, 3, '18:00', 'Sala XD', '3D', 'Subtitulada', 23000.00),
-(533535, 3, '21:00', 'Sala XD', '3D', 'Subtitulada', 23000.00),
-(533535, 4, '17:45', 'Sala 5', '2D', 'Subtitulada', 19000.00);
+(533535, 1, '16:20', 'Sala 4', '2D', 'Doblada', 20.00),
+(533535, 1, '19:10', 'Sala 4', '2D', 'Subtitulada', 20.00),
+(533535, 1, '22:00', 'Sala 4', '2D', 'Subtitulada', 20.00),
+(533535, 2, '18:00', 'Sala XD', '3D', 'Subtitulada', 26.00),
+(533535, 2, '21:00', 'Sala XD', '3D', 'Subtitulada', 26.00),
+(533535, 5, '17:45', 'Sala 3', '2D', 'Subtitulada', 19.00);
 
 -- Película: The Substance / La Sustancia (TMDb ID: 933260)
 INSERT INTO funciones (tmdb_movie_id, cine_id, hora, sala, formato, idioma, precio) VALUES
-(933260, 1, '19:45', 'Sala 5 Arte', '2D', 'Subtitulada', 20000.00),
-(933260, 1, '22:30', 'Sala 5 Arte', '2D', 'Subtitulada', 20000.00),
-(933260, 4, '20:30', 'Sala 2', '2D', 'Subtitulada', 19000.00);
+(933260, 1, '19:45', 'Sala 2', '2D', 'Subtitulada', 20.00),
+(933260, 1, '22:30', 'Sala 2', '2D', 'Subtitulada', 20.00),
+(933260, 2, '20:30', 'Sala 1', '2D', 'Subtitulada', 22.00);
 
 -- ------------------------------------------------------------------------------
 -- 9. DATOS SEMILLA: RESEÑAS DE EJEMPLO
@@ -202,22 +242,22 @@ INSERT INTO funciones (tmdb_movie_id, cine_id, hora, sala, formato, idioma, prec
 INSERT INTO resenas (tmdb_movie_id, nombre_usuario, comentario, puntaje, creado_en) VALUES
 (
     438631, 
-    'María González', 
-    'Una obra maestra visual y sonora. La dirección de Denis Villeneuve y la fotografía de Greig Fraser crean una experiencia inmersiva sin precedentes en la ciencia ficción moderna.', 
+    'María González (Huánuco)', 
+    'Una obra maestra visual y sonora. La vi en Cineplanet Huánuco y la experiencia fue impresionante.', 
     5, 
     NOW() - INTERVAL '3 days'
 ),
 (
     438631, 
-    'Carlos Ruiz', 
-    'La adaptación más fiel y cinematográfica de la novela de Frank Herbert. El diseño sonoro de Hans Zimmer en cines es simplemente imponente.', 
+    'Carlos Ruiz (Pasco)', 
+    'Bajé a Huánuco solo para verla en pantalla grande. El diseño sonoro de Hans Zimmer es simplemente brutal.', 
     4, 
     NOW() - INTERVAL '2 days'
 ),
 (
     693134, 
     'Alejandro Peña', 
-    'Superó todas mis expectativas. El arco narrativo de Paul y las escenas en el desierto de Arrakis elevan la saga al nivel de El Señor de los Anillos.', 
+    'Superó todas mis expectativas. Las escenas en el desierto de Arrakis elevan la saga al nivel de El Señor de los Anillos.', 
     5, 
     NOW() - INTERVAL '1 day'
 ),
@@ -230,15 +270,15 @@ INSERT INTO resenas (tmdb_movie_id, nombre_usuario, comentario, puntaje, creado_
 ),
 (
     1022789, 
-    'David Morales', 
-    'Excelente representación de la ansiedad y los cambios emocionales en la adolescencia. Divertida para niños y conmovedora para adultos.', 
+    'David Morales (Huancayo)', 
+    'Excelente representación de la ansiedad y los cambios emocionales en la adolescencia. Muy divertida.', 
     5, 
     NOW() - INTERVAL '8 hours'
 ),
 (
     533535, 
-    'Sebastián Torres', 
-    'Puro entretenimiento, acción desenfrenada y química insuperable entre Ryan Reynolds y Hugh Jackman. Los cameos fueron espectaculares.', 
+    'Sebastián Torres (Tacna)', 
+    'Puro entretenimiento, acción desenfrenada y química insuperable entre Ryan Reynolds y Hugh Jackman.', 
     4, 
     NOW() - INTERVAL '5 hours'
 ),

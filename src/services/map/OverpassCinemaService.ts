@@ -13,7 +13,7 @@ const PERUVIAN_CINEMAS_SEED: Array<{
   phone?: string;
   website?: string;
 }> = [
-  // Huánuco (El más cercano a Cerro de Pasco)
+  // Huánuco (Los dos cines más cercanos a Cerro de Pasco)
   {
     id: 101,
     name: 'Cineplanet Real Plaza Huánuco',
@@ -24,6 +24,17 @@ const PERUVIAN_CINEMAS_SEED: Array<{
     longitude: -76.24099,
     phone: '+51 1 624 9500',
     website: 'https://www.cineplanet.com.pe',
+  },
+  {
+    id: 100,
+    name: 'Cinemark Open Plaza Huánuco',
+    chain: 'Cinemark',
+    address: 'Jr. 2 de Mayo 125, C.C. Open Plaza',
+    city: 'Huánuco',
+    latitude: -9.93846,
+    longitude: -76.24763,
+    phone: '+51 1 610 0800',
+    website: 'https://www.cinemark-peru.com',
   },
   // Huancayo (Junín)
   {
@@ -222,15 +233,18 @@ export class OverpassCinemaService extends BaseApiService {
         }
 
         if (foundCinemas.length > 0) {
-          return foundCinemas;
+          // Ordenar por distancia real desde el usuario
+          foundCinemas.sort((a, b) => a.distanceTo(lat, lng) - b.distanceTo(lat, lng));
+          const regionalCinemas = foundCinemas.filter((c) => c.distanceTo(lat, lng) <= 250);
+          return regionalCinemas.length > 0 ? regionalCinemas.slice(0, 5) : foundCinemas.slice(0, 3);
         }
       }
     } catch (error) {
       console.warn('Consulta a Overpass API no disponible o agotada, usando sedes verificadas:', error);
     }
 
-    // Fallback garantizado: Retornar las sedes reales peruanas ordenadas por distancia
-    return PERUVIAN_CINEMAS_SEED.map(
+    // Fallback garantizado: Retornar sedes peruanas filtradas por cercanía regional al usuario
+    const mappedCinemas = PERUVIAN_CINEMAS_SEED.map(
       (seed) =>
         new Cinema({
           id: seed.id,
@@ -244,6 +258,18 @@ export class OverpassCinemaService extends BaseApiService {
           website: seed.website,
         })
     );
+
+    // Ordenar de menor a mayor distancia respecto a la ubicación del usuario
+    mappedCinemas.sort((a, b) => a.distanceTo(lat, lng) - b.distanceTo(lat, lng));
+
+    // Si hay cines a menos de 250 km (ej. Huánuco a ~84 km de Pasco), retornar únicamente los más cercanos (máx 4)
+    const withinRegion = mappedCinemas.filter((c) => c.distanceTo(lat, lng) <= 250);
+    if (withinRegion.length > 0) {
+      return withinRegion.slice(0, 4);
+    }
+
+    // Si el usuario está en una zona remota sin cines a menos de 250 km, retornar solo los 2 más cercanos del país
+    return mappedCinemas.slice(0, 2);
   }
 
   private detectChain(name: string, brand?: string): string {
