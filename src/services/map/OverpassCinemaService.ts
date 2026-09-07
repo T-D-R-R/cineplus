@@ -193,9 +193,11 @@ export class OverpassCinemaService extends BaseApiService {
   public async getCinemasNearby(
     lat: number,
     lng: number,
-    radiusMeters = 200000 // 200 km para cubrir valles interandinos y regiones vecinas
+    radiusMeters = 250000 // 250 km para cubrir valles interandinos y regiones vecinas
   ): Promise<Cinema[]> {
     const query = `[out:json][timeout:8];(node["amenity"="cinema"](around:${radiusMeters},${lat},${lng});way["amenity"="cinema"](around:${radiusMeters},${lat},${lng}););out center 15;`;
+
+    const foundCinemas: Cinema[] = [];
 
     try {
       const response = await this.request<{ elements: OverpassElement[] }>(
@@ -203,8 +205,6 @@ export class OverpassCinemaService extends BaseApiService {
       );
 
       if (response.elements && response.elements.length > 0) {
-        const foundCinemas: Cinema[] = [];
-
         for (const el of response.elements) {
           const latitude = el.lat ?? el.center?.lat;
           const longitude = el.lon ?? el.center?.lon;
@@ -231,20 +231,13 @@ export class OverpassCinemaService extends BaseApiService {
             })
           );
         }
-
-        if (foundCinemas.length > 0) {
-          // Ordenar por distancia real desde el usuario
-          foundCinemas.sort((a, b) => a.distanceTo(lat, lng) - b.distanceTo(lat, lng));
-          const regionalCinemas = foundCinemas.filter((c) => c.distanceTo(lat, lng) <= 250);
-          return regionalCinemas.length > 0 ? regionalCinemas.slice(0, 5) : foundCinemas.slice(0, 3);
-        }
       }
     } catch (error) {
       console.warn('Consulta a Overpass API no disponible o agotada, usando sedes verificadas:', error);
     }
 
-    // Fallback garantizado: Retornar sedes peruanas filtradas por cercanía regional al usuario
-    const mappedCinemas = PERUVIAN_CINEMAS_SEED.map(
+    // Convertir semillas peruanas verificadas
+    const seedCinemas = PERUVIAN_CINEMAS_SEED.map(
       (seed) =>
         new Cinema({
           id: seed.id,
@@ -259,17 +252,35 @@ export class OverpassCinemaService extends BaseApiService {
         })
     );
 
-    // Ordenar de menor a mayor distancia respecto a la ubicación del usuario
-    mappedCinemas.sort((a, b) => a.distanceTo(lat, lng) - b.distanceTo(lat, lng));
+    // Unir cines dinámicos de satélite/OSM con la red verificada sin duplicados
+    const combinedCinemas: Cinema[] = [...foundCinemas];
 
-    // Si hay cines a menos de 250 km (ej. Huánuco a ~84 km de Pasco), retornar únicamente los más cercanos (máx 4)
-    const withinRegion = mappedCinemas.filter((c) => c.distanceTo(lat, lng) <= 250);
+    for (const seed of seedCinemas) {
+      const alreadyExists = combinedCinemas.some((c) => {
+        const distKm = c.distanceTo(seed.latitude, seed.longitude);
+        const nameMatch =
+          c.name.toLowerCase().includes(seed.chain.toLowerCase()) &&
+          (c.city.toLowerCase().includes(seed.city.toLowerCase()) ||
+            c.address.toLowerCase().includes(seed.city.toLowerCase()));
+        return distKm < 1.5 || nameMatch;
+      });
+
+      if (!alreadyExists) {
+        combinedCinemas.push(seed);
+      }
+    }
+
+    // Ordenar de menor a mayor distancia respecto a la ubicación del usuario
+    combinedCinemas.sort((a, b) => a.distanceTo(lat, lng) - b.distanceTo(lat, lng));
+
+    // Filtrar sedes regionales: cines a menos de 250 km (ej. Huánuco a ~84 km de Pasco)
+    const withinRegion = combinedCinemas.filter((c) => c.distanceTo(lat, lng) <= 250);
     if (withinRegion.length > 0) {
       return withinRegion.slice(0, 4);
     }
 
     // Si el usuario está en una zona remota sin cines a menos de 250 km, retornar solo los 2 más cercanos del país
-    return mappedCinemas.slice(0, 2);
+    return combinedCinemas.slice(0, 2);
   }
 
   private detectChain(name: string, brand?: string): string {
