@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Star, Calendar, ArrowRight } from 'lucide-react';
+import { Star, Calendar, ArrowRight, Clock } from 'lucide-react';
 import { Movie } from '../../domain/Movie';
 
 interface MovieCardProps {
@@ -67,9 +67,27 @@ export function MovieCard({ movie }: MovieCardProps) {
           )}
         </div>
 
-        {/* Botón de Acción */}
+        {/* Botón de Acción y Estatus */}
         <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between">
-          <span className="text-xs text-slate-400">{movie.getFormattedRuntime()}</span>
+          {movie.runtime && movie.runtime > 0 ? (
+            <span className="text-xs text-slate-400 flex items-center gap-1">
+              <Clock className="w-3 h-3 text-amber-500/70" />
+              {movie.getFormattedRuntime()}
+            </span>
+          ) : (
+            <span className="text-xs font-medium flex items-center gap-1.5">
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  movie.theatricalStatus === 'UPCOMING'
+                    ? 'bg-purple-400 animate-pulse'
+                    : 'bg-emerald-400 animate-pulse'
+                }`}
+              />
+              <span className={movie.theatricalStatus === 'UPCOMING' ? 'text-purple-300' : 'text-emerald-400'}>
+                {movie.theatricalStatus === 'UPCOMING' ? 'Próximo Estreno' : 'En Cartelera'}
+              </span>
+            </span>
+          )}
           <Link
             to={`/pelicula/${movie.id}`}
             className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 text-xs font-bold transition-colors border border-amber-500/20 inline-flex items-center gap-1"
@@ -81,3 +99,4 @@ export function MovieCard({ movie }: MovieCardProps) {
     </div>
   );
 }
+
