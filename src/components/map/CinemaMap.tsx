@@ -255,23 +255,32 @@ export function CinemaMap({
                     )}
                   </div>
 
-                  {/* Horarios */}
-                  <div>
-                    <div className="text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-amber-400" /> Funciones sugeridas:
+                  {/* Horarios o Estado de Programación */}
+                  {showtimes.length > 0 ? (
+                    <div>
+                      <div className="text-[11px] font-medium text-emerald-400 mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-emerald-400" /> Funciones disponibles:
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {showtimes.map((st: Showtime) => (
+                          <span
+                            key={st.id}
+                            className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold"
+                            title={`${st.room} - ${st.format} (${st.language}) • S/. ${st.price.toFixed(2)}`}
+                          >
+                            {st.time}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {showtimes.map((st: Showtime) => (
-                        <span
-                          key={st.id}
-                          className="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700 text-amber-400 text-xs font-bold"
-                          title={`${st.room} - ${st.format} (${st.language})`}
-                        >
-                          {st.time}
-                        </span>
-                      ))}
+                  ) : (
+                    <div>
+                      <div className="text-[11px] text-slate-400 flex items-center gap-1.5 bg-slate-950/60 px-2.5 py-1.5 rounded-xl border border-slate-800/80">
+                        <Clock className="w-3 h-3 text-amber-400 shrink-0" />
+                        <span>Consultar programación en web oficial</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Acciones: Cartelera Oficial y Cómo llegar */}
                   <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between gap-2">
@@ -284,7 +293,7 @@ export function CinemaMap({
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Ticket className="w-3 h-3 text-amber-400" />
-                      <span>Comprar Entradas</span>
+                      <span>{showtimes.length > 0 ? 'Comprar Entradas' : 'Ver Cartelera'}</span>
                       <ExternalLink className="w-2.5 h-2.5" />
                     </a>
 

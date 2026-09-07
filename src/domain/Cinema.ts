@@ -46,8 +46,27 @@ export class Cinema extends BaseEntity {
   }
 
   public getOfficialBillboardUrl(): string {
-    if (this.website) return this.website;
-    const lower = `${this.name} ${this.chain}`.toLowerCase();
+    const lower = `${this.name} ${this.chain} ${this.city} ${this.address}`.toLowerCase();
+
+    // Sedes específicas de Huánuco
+    if ((lower.includes('cinemark') && lower.includes('huánuco')) || (lower.includes('cinemark') && lower.includes('huanuco'))) {
+      return 'https://www.cinemark-peru.com/cines/cinemark-huanuco';
+    }
+    if ((lower.includes('cineplanet') && lower.includes('huánuco')) || (lower.includes('cineplanet') && lower.includes('huanuco'))) {
+      return 'https://www.cineplanet.com.pe/cines/cineplanet-huanuco';
+    }
+
+    // Sedes de Huancayo
+    if ((lower.includes('cineplanet') && lower.includes('huancayo'))) {
+      return 'https://www.cineplanet.com.pe/cines/cineplanet-real-plaza-huancayo';
+    }
+    if ((lower.includes('cinemark') && lower.includes('huancayo'))) {
+      return 'https://www.cinemark-peru.com/cines/cinemark-mall-aventura-huancayo';
+    }
+
+    if (this.website && !this.website.endsWith('.com.pe') && !this.website.endsWith('.com')) {
+      return this.website;
+    }
     if (lower.includes('cineplanet')) return 'https://www.cineplanet.com.pe';
     if (lower.includes('cinemark')) return 'https://www.cinemark-peru.com';
     if (lower.includes('cinestar') || lower.includes('cine star')) return 'https://www.cinestar.com.pe';
@@ -55,7 +74,7 @@ export class Cinema extends BaseEntity {
     if (lower.includes('cinerama')) return 'https://www.cinerama.com.pe';
     if (lower.includes('movie time') || lower.includes('movietime')) return 'https://www.movietime.com.pe';
     if (lower.includes('cinepolis') || lower.includes('cinépolis')) return 'https://www.cinepolis.com.pe';
-    return `https://www.google.com/search?q=${encodeURIComponent(`${this.name} cartelera funciones entradas`)}`;
+    return this.website || `https://www.google.com/search?q=${encodeURIComponent(`${this.name} cartelera entradas`)}`;
   }
 
   public static fromSupabaseRow(row: SupabaseCinemaRow): Cinema {

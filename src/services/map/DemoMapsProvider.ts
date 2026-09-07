@@ -114,27 +114,35 @@ export class DemoMapsProvider extends BaseMapProvider {
                   </div>
 
                   <div style="margin-top: 16px;">
-                    <div style="font-size: 12px; font-weight: bold; color: #e2e8f0; margin-bottom: 8px;">Horarios y Salas disponibles:</div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                      ${selectedItem.showtimes
-                        .map(
-                          (s) => `
-                        <div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; padding: 6px 10px; text-align: center;">
-                          <div style="font-size: 13px; font-weight: bold; color: #f59e0b;">${s.time}</div>
-                          <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">${s.room}</div>
-                          <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">${s.getFormattedPrice()}</div>
-                        </div>
-                      `
-                        )
-                        .join('')}
+                    <div style="font-size: 12px; font-weight: bold; color: #e2e8f0; margin-bottom: 8px;">
+                      ${selectedItem.showtimes.length > 0 ? 'Horarios y Salas disponibles:' : 'Programación:'}
                     </div>
+                    ${
+                      selectedItem.showtimes.length > 0
+                        ? `<div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            ${selectedItem.showtimes
+                              .map(
+                                (s) => `
+                              <div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 8px; padding: 6px 10px; text-align: center;">
+                                <div style="font-size: 13px; font-weight: bold; color: #34d399;">${s.time}</div>
+                                <div style="font-size: 10px; color: #cbd5e1; margin-top: 2px;">${s.room}</div>
+                                <div style="font-size: 10px; color: #94a3b8; font-weight: 600;">${s.getFormattedPrice()}</div>
+                              </div>
+                            `
+                              )
+                              .join('')}
+                          </div>`
+                        : `<div style="font-size: 12px; color: #94a3b8; font-style: italic; background: rgba(15, 23, 42, 0.5); padding: 10px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05);">Consultar funciones del día en la web oficial</div>`
+                    }
                   </div>
                 </div>
 
-                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-size: 11px; color: #64748b;">Coordenadas: ${selectedItem.cinema.latitude.toFixed(3)}, ${selectedItem.cinema.longitude.toFixed(3)}</span>
-                  <a href="${selectedItem.cinema.getGoogleMapsUrl()}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
-                    Abrir en Google Maps ↗
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                  <a href="${selectedItem.cinema.getOfficialBillboardUrl()}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: #f59e0b; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 4px;">
+                    ${selectedItem.showtimes.length > 0 ? 'Comprar Entradas' : 'Ver Cartelera'} ↗
+                  </a>
+                  <a href="${selectedItem.cinema.getGoogleMapsUrl()}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: #38bdf8; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                    Google Maps ↗
                   </a>
                 </div>
               `

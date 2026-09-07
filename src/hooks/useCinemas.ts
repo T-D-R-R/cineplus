@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Cinema } from '../domain/Cinema';
-import { Showtime } from '../domain/Showtime';
 import { supabaseService } from '../services/SupabaseService';
 import { overpassCinemaService } from '../services/map/OverpassCinemaService';
 import type { CinemaWithShowtimes } from '../services/map/BaseMapProvider';
@@ -82,35 +81,7 @@ export function useCinemas(tmdbMovieId: number | string | undefined) {
         const showtimes =
           matchingSupa && matchingSupa.showtimes.length > 0
             ? matchingSupa.showtimes
-            : [
-                new Showtime({
-                  id: Number(cinema.id) * 10 + 1,
-                  tmdbMovieId: numMovieId,
-                  cinemaId: Number(cinema.id),
-                  time: '16:00',
-                  room: 'Sala 2 Regular',
-                  format: '2D Doblada',
-                  price: 18,
-                }),
-                new Showtime({
-                  id: Number(cinema.id) * 10 + 2,
-                  tmdbMovieId: numMovieId,
-                  cinemaId: Number(cinema.id),
-                  time: '18:30',
-                  room: cinema.chain === 'Cineplanet' ? 'Sala Xtreme' : 'Sala XD 3D',
-                  format: '3D Subtitulada',
-                  price: 24,
-                }),
-                new Showtime({
-                  id: Number(cinema.id) * 10 + 3,
-                  tmdbMovieId: numMovieId,
-                  cinemaId: Number(cinema.id),
-                  time: '21:15',
-                  room: 'Sala 1',
-                  format: '2D Subtitulada',
-                  price: 20,
-                }),
-              ];
+            : [];
 
         cinemaListWithShowtimes.push({
           cinema,

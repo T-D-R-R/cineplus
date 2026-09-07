@@ -271,12 +271,15 @@ export class GoogleMapsProvider extends BaseMapProvider {
       });
 
       marker.addListener('click', () => {
-        const showtimesHtml = showtimes
-          .map(
-            (s) =>
-              `<span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-right: 4px; margin-bottom: 4px; display: inline-block;">${s.time} (${s.room})</span>`
-          )
-          .join('');
+        const showtimesHtml =
+          showtimes.length > 0
+            ? showtimes
+                .map(
+                  (s) =>
+                    `<span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; margin-right: 4px; margin-bottom: 4px; display: inline-block;">${s.time} (${s.room})</span>`
+                )
+                .join('')
+            : `<span style="color: #94a3b8; font-size: 11px; font-style: italic;">Consultar programación en web oficial</span>`;
 
         const contentString = `
           <div style="background: #0f172a; color: #f8fafc; padding: 12px; border-radius: 10px; font-family: sans-serif; min-width: 220px; max-width: 280px;">
@@ -288,12 +291,19 @@ export class GoogleMapsProvider extends BaseMapProvider {
                 : ''
             }
             <div style="margin-top: 8px;">
-              <div style="font-size: 11px; font-weight: bold; color: #cbd5e1; margin-bottom: 4px;">Funciones disponibles:</div>
+              <div style="font-size: 11px; font-weight: bold; color: #cbd5e1; margin-bottom: 4px;">
+                ${showtimes.length > 0 ? 'Funciones disponibles:' : 'Programación:'}
+              </div>
               <div style="display: flex; flex-wrap: wrap;">${showtimesHtml}</div>
             </div>
-            <a href="${cinema.getGoogleMapsUrl()}" target="_blank" rel="noopener noreferrer" style="display: block; margin-top: 10px; font-size: 11px; color: #f59e0b; text-decoration: none; font-weight: bold;">
-              Ver cómo llegar en Google Maps ↗
-            </a>
+            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+              <a href="${cinema.getOfficialBillboardUrl()}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #f59e0b; text-decoration: none; font-weight: bold;">
+                ${showtimes.length > 0 ? 'Comprar entradas' : 'Ver cartelera oficial'} ↗
+              </a>
+              <a href="${cinema.getGoogleMapsUrl()}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #38bdf8; text-decoration: none;">
+                Cómo llegar en Google Maps ↗
+              </a>
+            </div>
           </div>
         `;
 
