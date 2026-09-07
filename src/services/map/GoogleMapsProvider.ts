@@ -38,6 +38,25 @@ export class GoogleMapsProvider extends BaseMapProvider {
       }
     };
 
+    // Silenciar ventana emergente (alert) intrusiva de advertencia de Google Maps
+    if (typeof window !== 'undefined') {
+      const originalAlert = window.alert;
+      window.alert = function (message?: any) {
+        if (
+          typeof message === 'string' &&
+          (message.includes('Google Maps') ||
+            message.includes('propietario') ||
+            message.includes('owner') ||
+            message.includes('cargar Google Maps') ||
+            message.includes('correctamente'))
+        ) {
+          console.warn('[CinePlus] Alerta emergente de Google Maps suprimida:', message);
+          return;
+        }
+        originalAlert.apply(window, arguments as any);
+      };
+    }
+
     await this.loadSdk();
 
     if (!window.google?.maps) {
