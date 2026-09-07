@@ -43,3 +43,30 @@
   backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* Ocultar diálogo modal y advertencias de Google Maps en desarrollo */
+.gm-err-container,
+.gm-err-content,
+.gm-err-autocomplete,
+.gm-err-message,
+.gm-err-title,
+.dismissButton,
+div[class*="gm-err"],
+[aria-label*="Google Maps"][role="dialog"],
+div:has(> .gm-err-container),
+div:has(> [class*="gm-err"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Evitar que capas de aviso bloqueen interacciones táctiles o clics en el mapa */
+.gm-style-moc {
+  pointer-events: none !important;
+}

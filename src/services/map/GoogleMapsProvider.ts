@@ -18,6 +18,8 @@ export class GoogleMapsProvider extends BaseMapProvider {
   private cinemaMarkers: any[] = [];
   private infoWindow: any = null;
   private onAuthFailureCallback?: () => void;
+  private dismissObserver: MutationObserver | null = null;
+  private dismissInterval: any = null;
 
   public setOnAuthFailure(callback: () => void): void {
     this.onAuthFailureCallback = callback;
@@ -92,7 +94,80 @@ export class GoogleMapsProvider extends BaseMapProvider {
     });
 
     this.infoWindow = new window.google.maps.InfoWindow();
+    this.setupAutoDismiss(element);
     this.isInitialized = true;
+  }
+
+  private setupAutoDismiss(element: HTMLElement): void {
+    const dismissAllErrors = () => {
+      // 1. Ocultar contenedores con clase gm-err
+      const errContainers = document.querySelectorAll<HTMLElement>(
+        '.gm-err-container, .gm-err-content, .gm-err-autocomplete, [class*="gm-err"]'
+      );
+      errContainers.forEach((container) => {
+        container.style.setProperty('display', 'none', 'important');
+        container.style.setProperty('visibility', 'hidden', 'important');
+        container.style.setProperty('pointer-events', 'none', 'important');
+        container.style.setProperty('opacity', '0', 'important');
+        if (
+          container.parentElement &&
+          container.parentElement !== element &&
+          container.parentElement !== document.body &&
+          container.parentElement.children.length === 1
+        ) {
+          container.parentElement.style.setProperty('display', 'none', 'important');
+          container.parentElement.style.setProperty('pointer-events', 'none', 'important');
+        }
+      });
+
+      // 2. Hacer clic programático en el botón "Aceptar" / "Dismiss"
+      const dismissButtons = document.querySelectorAll<HTMLButtonElement>(
+        '.dismissButton, button[title*="Aceptar"], button[aria-label*="Aceptar"], .gm-err-container button'
+      );
+      dismissButtons.forEach((btn) => {
+        try {
+          btn.click();
+        } catch {
+          // Ignorar error si no es clickeable
+        }
+      });
+
+      // 3. Revisar botones con texto "Aceptar", "OK" o "Dismiss"
+      const allMapButtons = element.querySelectorAll<HTMLButtonElement>('button');
+      allMapButtons.forEach((btn) => {
+        const txt = btn.textContent?.trim().toLowerCase();
+        if (txt === 'aceptar' || txt === 'ok' || txt === 'dismiss') {
+          try {
+            btn.click();
+          } catch {
+            // Ignorar
+          }
+        }
+      });
+    };
+
+    dismissAllErrors();
+
+    if (typeof MutationObserver !== 'undefined') {
+      this.dismissObserver = new MutationObserver(() => {
+        dismissAllErrors();
+      });
+
+      this.dismissObserver.observe(element, { childList: true, subtree: true });
+      this.dismissObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    let attempts = 0;
+    this.dismissInterval = setInterval(() => {
+      dismissAllErrors();
+      attempts++;
+      if (attempts > 40) {
+        if (this.dismissInterval) {
+          clearInterval(this.dismissInterval);
+          this.dismissInterval = null;
+        }
+      }
+    }, 100);
   }
 
   private loadSdk(): Promise<void> {
@@ -243,6 +318,14 @@ export class GoogleMapsProvider extends BaseMapProvider {
   }
 
   public destroy(): void {
+    if (this.dismissObserver) {
+      this.dismissObserver.disconnect();
+      this.dismissObserver = null;
+    }
+    if (this.dismissInterval) {
+      clearInterval(this.dismissInterval);
+      this.dismissInterval = null;
+    }
     if (this.cinemaMarkers) {
       this.cinemaMarkers.forEach((m) => m.setMap(null));
       this.cinemaMarkers = [];
