@@ -12,6 +12,10 @@ export abstract class BaseMapProvider {
   protected container: HTMLElement | null = null;
   protected isInitialized = false;
 
+  public get isReady(): boolean {
+    return this.isInitialized;
+  }
+
   /**
    * Inicializa el lienzo del mapa centrado en coordenadas iniciales.
    */

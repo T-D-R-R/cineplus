@@ -11,6 +11,7 @@ declare global {
 }
 
 export class GoogleMapsProvider extends BaseMapProvider {
+  private static sdkPromise: Promise<void> | null = null;
   private mapInstance: any = null;
   private userMarker: any = null;
   private cinemaMarkers: any[] = [];
@@ -19,7 +20,7 @@ export class GoogleMapsProvider extends BaseMapProvider {
   public async initialize(
     element: HTMLElement,
     center: { lat: number; lng: number },
-    zoom = 13
+    zoom = 12
   ): Promise<void> {
     this.container = element;
     await this.loadSdk();
@@ -27,6 +28,8 @@ export class GoogleMapsProvider extends BaseMapProvider {
     if (!window.google?.maps) {
       throw new Error('Google Maps SDK no disponible');
     }
+
+    element.innerHTML = '';
 
     const styledMapType = [
       { elementType: 'geometry', stylers: [{ color: '#171c26' }] },
@@ -59,15 +62,31 @@ export class GoogleMapsProvider extends BaseMapProvider {
   }
 
   private loadSdk(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (window.google?.maps) {
-        resolve();
-        return;
-      }
+    if (window.google?.maps) {
+      return Promise.resolve();
+    }
 
-      const apiKey = getConfig().googleMapsApiKey;
-      if (!apiKey) {
-        reject(new Error('No se ha proporcionado Google Maps API Key'));
+    if (GoogleMapsProvider.sdkPromise) {
+      return GoogleMapsProvider.sdkPromise;
+    }
+
+    const apiKey = getConfig().googleMapsApiKey;
+    if (!apiKey) {
+      return Promise.reject(new Error('No se ha proporcionado Google Maps API Key'));
+    }
+
+    GoogleMapsProvider.sdkPromise = new Promise((resolve, reject) => {
+      const existingScript = document.getElementById('google-maps-script');
+      if (existingScript) {
+        if (window.google?.maps) {
+          resolve();
+        } else {
+          existingScript.addEventListener('load', () => resolve());
+          existingScript.addEventListener('error', () => {
+            GoogleMapsProvider.sdkPromise = null;
+            reject(new Error('Fallo al cargar script de Google Maps'));
+          });
+        }
         return;
       }
 
@@ -81,12 +100,17 @@ export class GoogleMapsProvider extends BaseMapProvider {
       script.id = 'google-maps-script';
       script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(
         apiKey
-      )}&callback=${callbackName}`;
+      )}&callback=${callbackName}&loading=async`;
       script.async = true;
       script.defer = true;
-      script.onerror = () => reject(new Error('Fallo al cargar script de Google Maps'));
+      script.onerror = () => {
+        GoogleMapsProvider.sdkPromise = null;
+        reject(new Error('Fallo al cargar script de Google Maps'));
+      };
       document.head.appendChild(script);
     });
+
+    return GoogleMapsProvider.sdkPromise;
   }
 
   public renderUserMarker(lat: number, lng: number): void {
@@ -193,6 +217,11 @@ export class GoogleMapsProvider extends BaseMapProvider {
       this.userMarker.setMap(null);
       this.userMarker = null;
     }
+    if (this.infoWindow) {
+      this.infoWindow.close();
+      this.infoWindow = null;
+    }
+    this.isInitialized = false;
     this.mapInstance = null;
   }
 }

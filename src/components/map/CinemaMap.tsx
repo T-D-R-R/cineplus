@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation, Clock, ExternalLink, Sparkles, Building2, Ticket } from 'lucide-react';
 import { Cinema } from '../../domain/Cinema';
 import { Showtime } from '../../domain/Showtime';
-import { createMapProvider, type BaseMapProvider, type CinemaWithShowtimes } from '../../services/map';
+import { createMapProvider, DemoMapsProvider, type BaseMapProvider, type CinemaWithShowtimes } from '../../services/map';
 import { isGoogleMapsConfigured } from '../../core/config';
 import { getPeruvianCityFromCoords } from '../../core/utils';
 
@@ -23,46 +23,75 @@ export function CinemaMap({
   const providerRef = useRef<BaseMapProvider | null>(null);
   const [selectedCinema, setSelectedCinema] = useState<Cinema | null>(null);
 
+  const [mapReady, setMapReady] = useState(false);
+
   const googleMapsOk = isGoogleMapsConfigured();
   const userCity = getPeruvianCityFromCoords(userLocation.lat, userLocation.lng);
 
+  // 1. Inicializar el mapa UNA SOLA VEZ al montar el contenedor
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Crear proveedor según configuración (LSP)
+    let isCancelled = false;
     const provider = createMapProvider();
     providerRef.current = provider;
-
-    let isMounted = true;
 
     provider
       .initialize(mapContainerRef.current, userLocation, 12)
       .then(() => {
-        if (!isMounted) return;
+        if (isCancelled) return;
+        setMapReady(true);
         provider.renderUserMarker(userLocation.lat, userLocation.lng);
-        provider.renderCinemaMarkers(cinemas, (cinema) => {
-          setSelectedCinema(cinema);
-        });
+        if (cinemas.length > 0) {
+          provider.renderCinemaMarkers(cinemas, (cinema: Cinema) => {
+            setSelectedCinema(cinema);
+          });
+        }
       })
       .catch((err) => {
-        console.warn('Error inicializando proveedor de mapa:', err);
+        console.warn('Google Maps no pudo inicializar, activando panel interactivo de respaldo:', err);
+        if (isCancelled || !mapContainerRef.current) return;
+        // Fallback garantizado para que el cuadro NUNCA quede en blanco
+        const fallback = new DemoMapsProvider();
+        providerRef.current = fallback;
+        fallback
+          .initialize(mapContainerRef.current, userLocation, 12)
+          .then(() => {
+            if (isCancelled) return;
+            setMapReady(true);
+            fallback.renderUserMarker(userLocation.lat, userLocation.lng);
+            if (cinemas.length > 0) {
+              fallback.renderCinemaMarkers(cinemas, (cinema: Cinema) => {
+                setSelectedCinema(cinema);
+              });
+            }
+          });
       });
 
     return () => {
-      isMounted = false;
+      isCancelled = true;
       provider.destroy();
       providerRef.current = null;
+      setMapReady(false);
     };
-  }, [userLocation, cinemas]);
+  }, []); // Montaje único
 
-  // Actualizar marcadores si la lista cambia
+  // 2. Actualizar marcador del usuario cuando el GPS detecta nuevas coordenadas
   useEffect(() => {
-    if (providerRef.current) {
+    if (mapReady && providerRef.current) {
+      providerRef.current.renderUserMarker(userLocation.lat, userLocation.lng);
+      providerRef.current.centerOn(userLocation.lat, userLocation.lng);
+    }
+  }, [mapReady, userLocation.lat, userLocation.lng]);
+
+  // 3. Actualizar marcadores de cines cuando se cargan las salas
+  useEffect(() => {
+    if (mapReady && providerRef.current && cinemas.length > 0) {
       providerRef.current.renderCinemaMarkers(cinemas, (cinema) => {
         setSelectedCinema(cinema);
       });
     }
-  }, [cinemas]);
+  }, [mapReady, cinemas]);
 
   return (
     <section className="space-y-4" id="seccion-cines">
