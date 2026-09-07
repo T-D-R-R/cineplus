@@ -7,6 +7,7 @@ declare global {
   interface Window {
     google?: any;
     __google_maps_callback?: () => void;
+    gm_authFailure?: () => void;
   }
 }
 
@@ -16,6 +17,11 @@ export class GoogleMapsProvider extends BaseMapProvider {
   private userMarker: any = null;
   private cinemaMarkers: any[] = [];
   private infoWindow: any = null;
+  private onAuthFailureCallback?: () => void;
+
+  public setOnAuthFailure(callback: () => void): void {
+    this.onAuthFailureCallback = callback;
+  }
 
   public async initialize(
     element: HTMLElement,
@@ -23,6 +29,15 @@ export class GoogleMapsProvider extends BaseMapProvider {
     zoom = 12
   ): Promise<void> {
     this.container = element;
+
+    // Registrar interceptor de fallo de autenticación / cuota de Google
+    window.gm_authFailure = () => {
+      console.warn('Google Maps reportó cuota diaria agotada o fallo de autenticación (gm_authFailure).');
+      if (this.onAuthFailureCallback) {
+        this.onAuthFailureCallback();
+      }
+    };
+
     await this.loadSdk();
 
     if (!window.google?.maps) {
@@ -220,6 +235,10 @@ export class GoogleMapsProvider extends BaseMapProvider {
     if (this.infoWindow) {
       this.infoWindow.close();
       this.infoWindow = null;
+    }
+    this.onAuthFailureCallback = undefined;
+    if (window.gm_authFailure) {
+      window.gm_authFailure = undefined;
     }
     this.isInitialized = false;
     this.mapInstance = null;

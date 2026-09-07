@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MapPin, Navigation, Clock, ExternalLink, Sparkles, Building2, Ticket } from 'lucide-react';
 import { Cinema } from '../../domain/Cinema';
 import { Showtime } from '../../domain/Showtime';
-import { createMapProvider, DemoMapsProvider, type BaseMapProvider, type CinemaWithShowtimes } from '../../services/map';
+import { createMapProvider, DemoMapsProvider, GoogleMapsProvider, type BaseMapProvider, type CinemaWithShowtimes } from '../../services/map';
 import { isGoogleMapsConfigured } from '../../core/config';
 import { getPeruvianCityFromCoords } from '../../core/utils';
 
@@ -36,6 +36,32 @@ export function CinemaMap({
     const provider = createMapProvider();
     providerRef.current = provider;
 
+    const activateFallback = (reason: string) => {
+      console.warn(`Activando panel interactivo de respaldo (${reason})`);
+      if (isCancelled || !mapContainerRef.current) return;
+      const fallback = new DemoMapsProvider();
+      providerRef.current = fallback;
+      fallback
+        .initialize(mapContainerRef.current, userLocation, 12)
+        .then(() => {
+          if (isCancelled) return;
+          setMapReady(true);
+          fallback.renderUserMarker(userLocation.lat, userLocation.lng);
+          if (cinemas.length > 0) {
+            fallback.renderCinemaMarkers(cinemas, (c: Cinema) => {
+              setSelectedCinema(c);
+            });
+          }
+        });
+    };
+
+    // Si es Google Maps, interceptar cuando la API de Google reporta cuota agotada
+    if (provider instanceof GoogleMapsProvider) {
+      provider.setOnAuthFailure(() => {
+        activateFallback('Cuota diaria de Google Maps agotada');
+      });
+    }
+
     provider
       .initialize(mapContainerRef.current, userLocation, 12)
       .then(() => {
@@ -49,23 +75,7 @@ export function CinemaMap({
         }
       })
       .catch((err) => {
-        console.warn('Google Maps no pudo inicializar, activando panel interactivo de respaldo:', err);
-        if (isCancelled || !mapContainerRef.current) return;
-        // Fallback garantizado para que el cuadro NUNCA quede en blanco
-        const fallback = new DemoMapsProvider();
-        providerRef.current = fallback;
-        fallback
-          .initialize(mapContainerRef.current, userLocation, 12)
-          .then(() => {
-            if (isCancelled) return;
-            setMapReady(true);
-            fallback.renderUserMarker(userLocation.lat, userLocation.lng);
-            if (cinemas.length > 0) {
-              fallback.renderCinemaMarkers(cinemas, (cinema: Cinema) => {
-                setSelectedCinema(cinema);
-              });
-            }
-          });
+        activateFallback(err?.message || 'Fallo de inicialización de Google Maps');
       });
 
     return () => {
