@@ -66,7 +66,16 @@ div:has(> [class*="gm-err"]) {
   overflow: hidden !important;
 }
 
-/* Evitar que capas de aviso bloqueen interacciones táctiles o clics en el mapa */
+/* Quita el filtro opaco/oscuro y restaura el contraste y colores nativos del mapa */
+.gm-style > div:first-child > div:first-child {
+  filter: none !important;
+}
+
+/* Ocultar capas de advertencia, superposiciones y marcas de desarrollo */
+.gm-style-pbc,
 .gm-style-moc {
+  display: none !important;
+  opacity: 0 !important;
   pointer-events: none !important;
 }
+
