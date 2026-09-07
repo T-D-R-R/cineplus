@@ -104,3 +104,41 @@ export function debounce<T extends (...args: any[]) => void>(
     timeoutId = setTimeout(() => func(...args), delay);
   };
 }
+
+/**
+ * Deduce la ciudad o departamento peruano más cercano a un par de coordenadas GPS.
+ */
+export function getPeruvianCityFromCoords(lat: number, lng: number): string {
+  const referenceCities = [
+    { name: 'Cerro de Pasco, Pasco', lat: -10.686, lng: -76.256 },
+    { name: 'Huánuco', lat: -9.930, lng: -76.240 },
+    { name: 'Huancayo, Junín', lat: -12.067, lng: -75.210 },
+    { name: 'Lima Metropolitana', lat: -12.046, lng: -77.043 },
+    { name: 'Tacna', lat: -18.018, lng: -70.253 },
+    { name: 'Arequipa', lat: -16.409, lng: -71.537 },
+    { name: 'Cusco', lat: -13.532, lng: -71.967 },
+    { name: 'Trujillo, La Libertad', lat: -8.111, lng: -79.028 },
+    { name: 'Chiclayo, Lambayeque', lat: -6.771, lng: -79.840 },
+    { name: 'Piura', lat: -5.194, lng: -80.632 },
+    { name: 'Ica', lat: -14.067, lng: -75.728 },
+    { name: 'Tarapoto, San Martín', lat: -6.491, lng: -76.368 },
+    { name: 'Pucallpa, Ucayali', lat: -8.379, lng: -74.553 },
+    { name: 'Iquitos, Loreto', lat: -3.749, lng: -73.253 },
+  ];
+
+  let closest = referenceCities[0];
+  let minDistance = 999999;
+
+  for (const city of referenceCities) {
+    const dist = calculateHaversineDistance(lat, lng, city.lat, city.lng);
+    if (dist < minDistance) {
+      minDistance = dist;
+      closest = city;
+    }
+  }
+
+  if (minDistance <= 65) {
+    return closest.name;
+  }
+  return 'Perú (GPS)';
+}

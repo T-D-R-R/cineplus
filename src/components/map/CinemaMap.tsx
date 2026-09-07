@@ -4,6 +4,7 @@ import { Cinema } from '../../domain/Cinema';
 import { Showtime } from '../../domain/Showtime';
 import { createMapProvider, type BaseMapProvider, type CinemaWithShowtimes } from '../../services/map';
 import { isGoogleMapsConfigured } from '../../core/config';
+import { getPeruvianCityFromCoords } from '../../core/utils';
 
 interface CinemaMapProps {
   cinemas: CinemaWithShowtimes[];
@@ -23,6 +24,7 @@ export function CinemaMap({
   const [selectedCinema, setSelectedCinema] = useState<Cinema | null>(null);
 
   const googleMapsOk = isGoogleMapsConfigured();
+  const userCity = getPeruvianCityFromCoords(userLocation.lat, userLocation.lng);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -34,7 +36,7 @@ export function CinemaMap({
     let isMounted = true;
 
     provider
-      .initialize(mapContainerRef.current, userLocation, 12)
+      .initialize(mapContainerRef.current, userLocation, 10)
       .then(() => {
         if (!isMounted) return;
         provider.renderUserMarker(userLocation.lat, userLocation.lng);
@@ -64,16 +66,27 @@ export function CinemaMap({
 
   return (
     <section className="space-y-4" id="seccion-cines">
-      {/* Cabecera de la Sección */}
+      {/* Cabecera de la Sección con Ubicación Detectada */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-rose-500" />
             <h3 className="text-xl font-bold text-white">Cines Cercanos en Tiempo Real</h3>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Salas comerciales reales detectadas automáticamente según tus coordenadas GPS
-          </p>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <span className="text-xs text-slate-400">
+              Salas comerciales detectadas por satélite:
+            </span>
+            {/* Chip Dinámico con Ciudad y Coordenadas del Usuario */}
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-300 text-xs font-semibold shadow-xs">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-400" />
+              </span>
+              <Navigation className="w-3 h-3 text-sky-400" />
+              <span>Tu ubicación: <strong className="text-white">{userCity}</strong> ({userLocation.lat.toFixed(3)}, {userLocation.lng.toFixed(3)})</span>
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -86,7 +99,7 @@ export function CinemaMap({
             }`}
           >
             <Sparkles className="w-3 h-3" />
-            {googleMapsOk ? 'Google Maps SDK' : 'GPS Dinámico Activo'}
+            {googleMapsOk ? 'Google Maps SDK' : 'Mapa Interactivo OpenStreetMap'}
           </span>
 
           {onRefreshLocation && (
@@ -128,7 +141,10 @@ export function CinemaMap({
               return (
                 <div
                   key={cinema.id}
-                  onClick={() => setSelectedCinema(cinema)}
+                  onClick={() => {
+                    setSelectedCinema(cinema);
+                    providerRef.current?.centerOn(cinema.latitude, cinema.longitude, 13);
+                  }}
                   className={`p-3.5 rounded-2xl border transition-all cursor-pointer space-y-2.5 ${
                     isSelected
                       ? 'bg-amber-500/10 border-amber-500/50 shadow-md shadow-amber-500/5'
