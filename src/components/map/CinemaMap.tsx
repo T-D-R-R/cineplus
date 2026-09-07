@@ -36,7 +36,7 @@ export function CinemaMap({
     let isMounted = true;
 
     provider
-      .initialize(mapContainerRef.current, userLocation, 10)
+      .initialize(mapContainerRef.current, userLocation, 12)
       .then(() => {
         if (!isMounted) return;
         provider.renderUserMarker(userLocation.lat, userLocation.lng);
@@ -99,7 +99,7 @@ export function CinemaMap({
             }`}
           >
             <Sparkles className="w-3 h-3" />
-            {googleMapsOk ? 'Google Maps SDK' : 'Mapa Interactivo OpenStreetMap'}
+            {googleMapsOk ? 'Google Maps SDK' : 'GPS Dinámico Activo'}
           </span>
 
           {onRefreshLocation && (
