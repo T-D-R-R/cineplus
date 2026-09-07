@@ -317,6 +317,12 @@ export class GoogleMapsProvider extends BaseMapProvider {
     }
   }
 
+  public closeInfoWindow(): void {
+    if (this.infoWindow) {
+      this.infoWindow.close();
+    }
+  }
+
   public destroy(): void {
     if (this.dismissObserver) {
       this.dismissObserver.disconnect();
