@@ -4,23 +4,29 @@ import { formatRelativeTime } from '../core/utils';
 
 export class Review extends BaseEntity {
   public readonly tmdbMovieId: number;
+  public readonly movieTitle?: string;
   public readonly userName: string;
   public readonly comment: string;
   public readonly rating: number; // 1 a 5 estrellas
+  public readonly sentiment?: string;
 
   constructor(params: {
     id?: number | string;
     tmdbMovieId: number;
+    movieTitle?: string;
     userName: string;
     comment: string;
     rating: number;
+    sentiment?: string;
     createdAt?: Date | string | null;
   }) {
     super(params.id || 0, params.createdAt);
     this.tmdbMovieId = params.tmdbMovieId;
+    this.movieTitle = params.movieTitle?.trim();
     this.userName = params.userName.trim();
     this.comment = params.comment.trim();
     this.rating = Math.max(1, Math.min(5, Math.round(params.rating)));
+    this.sentiment = params.sentiment?.trim() || 'neutral';
   }
 
   public validate(): { isValid: boolean; errors: string[] } {
@@ -51,9 +57,11 @@ export class Review extends BaseEntity {
     return new Review({
       id: row.id,
       tmdbMovieId: row.tmdb_movie_id,
+      movieTitle: row.titulo_pelicula || undefined,
       userName: row.nombre_usuario,
       comment: row.comentario,
       rating: row.puntaje,
+      sentiment: row.sentimiento,
       createdAt: row.creado_en,
     });
   }
@@ -62,9 +70,11 @@ export class Review extends BaseEntity {
     return {
       id: this.id,
       tmdb_movie_id: this.tmdbMovieId,
+      titulo_pelicula: this.movieTitle || null,
       nombre_usuario: this.userName,
       comentario: this.comment,
       puntaje: this.rating,
+      sentimiento: this.sentiment || 'neutral',
       creado_en: this.createdAt.toISOString(),
     };
   }

@@ -214,11 +214,22 @@ El proyecto fue diseñado aplicando los principios de **Clean Architecture**, **
    * **Botón inteligente de retorno al usuario:** Botón flotante `[ Volver a mi ubicación ]` en el mapa para regresar la cámara a las coordenadas del usuario con un solo clic.
    * Supresión visual y programática del diálogo de advertencia de desarrollo de Google Maps.
    * Enlaces directos a las páginas oficiales de las cadenas para compra de boletos y consulta de cartelera.
-4. **Sistema Interactivo de Reseñas**:
+4. **Sistema Interactivo de Reseñas y Dataset de Entrenamiento**:
    * Creación de valoraciones (1 a 5 estrellas) y comentarios.
-   * Persistencia en PostgreSQL (Supabase).
-   * Actualización optimista de interfaz (la crítica se muestra al instante sin necesidad de recargar la página).
-5. **Navegación Fluida (SPA)**:
+   * Persistencia en PostgreSQL (Supabase) con nuevas columnas `titulo_pelicula` y `sentimiento`.
+   * **Dataset de 500 reseñas balanceadas:** Generado mediante `npm run generate:dataset` en [`dataset_resenas_500.csv`](dataset_resenas_500.csv).
+5. **Motor de Machine Learning Nativo (TypeScript / POO)**:
+   * **Clasificador de Sentimientos (Multinomial Naive Bayes con Suavizado de Laplace):** Entrenado con 500 reseñas en español, tokenización con lematización/stemming de sufijos y 100% de precisión en validación Train/Test (80/20).
+   * **Motor de Recomendación de Contenido (k-NN / Similitud Coseno):** Calcula la afinidad matemática sobre vectores de género (multi-hot), calificaciones de TMDb y popularidad.
+   * Ejecutable de pruebas: `npx tsx scripts/test_ml_models.js`.
+6. **Integración con Modelos de Lenguaje (LLM) y Sistema Multi-Agente**:
+   * **Servicio LLM Desacoplado:** Conexión con **Google Gemini API** (`VITE_GEMINI_API_KEY`) y modo cognitivo autónomo para evaluaciones sin clave.
+   * **Comité Asesor de 3 Agentes Especialistas:**
+     1. *Agente Crítico de Arte:* Evalúa guion, dirección y métricas del clasificador de sentimiento ML.
+     2. *Agente Financiero / Logístico:* Analiza precios de boletos en Soles (S/.), formatos (2D/3D/XD) y disponibilidad en cines de Perú (Huánuco, Huancayo, Lima).
+     3. *Agente Moderador / Juez:* Sintetiza el debate, cruza el puntaje de afinidad del usuario y dicta el **Veredicto Final Vinculante**.
+   * Ejecutable de pruebas: `npx tsx scripts/test_agents.js`.
+7. **Navegación Fluida (SPA)**:
    * Enrutamiento dinámico con `react-router-dom`.
    * Restauración automática del scroll al inicio (`ScrollToTop`) al cambiar de página o película.
 

@@ -44,24 +44,31 @@ CREATE TABLE funciones (
 );
 
 -- ------------------------------------------------------------------------------
--- 4. TABLA: resenas (Comentarios y valoraciones persistentes de usuarios)
+-- 4. TABLA: resenas (Comentarios, valoraciones persistentes y dataset de ML)
 -- ------------------------------------------------------------------------------
 CREATE TABLE resenas (
     id SERIAL PRIMARY KEY,
     tmdb_movie_id INT NOT NULL,                  -- ID oficial de la película en TMDb
+    titulo_pelicula VARCHAR(250),                -- Título de la película para Machine Learning y LLM
     nombre_usuario VARCHAR(100) NOT NULL,
     comentario TEXT NOT NULL,
     puntaje INT NOT NULL CHECK (puntaje BETWEEN 1 AND 5),
+    sentimiento VARCHAR(20) DEFAULT 'neutral',   -- Etiqueta de clasificación ML ('positivo', 'negativo', 'neutral')
     creado_en TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Migración idempotente para bases de datos que ya tenían la tabla creada
+ALTER TABLE resenas ADD COLUMN IF NOT EXISTS titulo_pelicula VARCHAR(250);
+ALTER TABLE resenas ADD COLUMN IF NOT EXISTS sentimiento VARCHAR(20) DEFAULT 'neutral';
+
 -- ------------------------------------------------------------------------------
--- 5. ÍNDICES DE RENDIMIENTO (B-Tree para consultas ultrarrápidas)
+-- 5. ÍNDICES DE RENDIMIENTO (B-Tree para consultas ultrarrápidas y ML)
 -- ------------------------------------------------------------------------------
 CREATE INDEX idx_funciones_tmdb_movie_id ON funciones(tmdb_movie_id);
 CREATE INDEX idx_funciones_cine_id ON funciones(cine_id);
 CREATE INDEX idx_resenas_tmdb_movie_id ON resenas(tmdb_movie_id);
 CREATE INDEX idx_resenas_creado_en ON resenas(creado_en DESC);
+CREATE INDEX idx_resenas_sentimiento ON resenas(sentimiento);
 CREATE INDEX idx_cines_coords ON cines(latitud, longitud);
 
 -- ------------------------------------------------------------------------------

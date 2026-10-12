@@ -4,6 +4,25 @@ Esta guía te explica cómo publicar tu aplicación **CinePlus** en internet de 
 
 ---
 
+## Paso Previo: Configurar Base de Datos y Dataset en Supabase
+
+Antes de desplegar en producción, prepara tu base de datos en Supabase con el esquema relacional y el dataset de 500 reseñas:
+
+1. **Crear o actualizar tablas e índices:**
+   - Ingresa a tu proyecto en [Supabase.com](https://supabase.com/).
+   - En el menú lateral, abre **SQL Editor**.
+   - Haz clic en **"New query"**, copia y pega todo el contenido de [`database/schema.sql`](file:///c:/Users/Usuario/Music/HTML/Trabajo/database/schema.sql) y pulsa **"Run"**.
+   - Esto creará las tablas `cines`, `funciones` y `resenas` con soporte para `titulo_pelicula` y `sentimiento`.
+
+2. **Cargar el Dataset de 500 Reseñas:**
+   - En el menú lateral de Supabase, ve a **Table Editor**.
+   - Selecciona la tabla **`resenas`**.
+   - Haz clic en **"Insert" > "Import data from CSV"**.
+   - Selecciona el archivo [`dataset_resenas_500.csv`](file:///c:/Users/Usuario/Music/HTML/Trabajo/dataset_resenas_500.csv) ubicado en la raíz de tu proyecto.
+   - Supabase detectará automáticamente las columnas (`tmdb_movie_id`, `titulo_pelicula`, `nombre_usuario`, `comentario`, `puntaje`, `sentimiento`) y completará la importación en segundos.
+
+---
+
 ## Opción Recomendada: Despliegue en Vercel con GitHub
 
 ### Paso 1: Inicializar y Subir tu Proyecto a GitHub
@@ -52,12 +71,18 @@ git push -u origin main
 
 Despliega la sección **"Environment Variables"** antes de hacer clic en Deploy y agrega las siguientes claves (copiadas desde tu `.env.local`):
 
-| Variable | Valor de Ejemplo | Descripción |
+| Variable | Tipo | Descripción |
 | :--- | :--- | :--- |
-| `VITE_TMDB_API_KEY` | `tu_clave_de_themoviedb` | Clave v3 de [themoviedb.org](https://www.themoviedb.org/settings/api). |
-| `VITE_SUPABASE_URL` | `https://xxxxxx.supabase.co` | Project URL de [supabase.com](https://supabase.com/). |
-| `VITE_SUPABASE_ANON_KEY` | `eyJhbGciOi...` | Clave pública anónima de Supabase. |
-| `VITE_GOOGLE_MAPS_API_KEY` | *(Opcional)* | Clave de Google Maps (si se omite, se activa el Modo Demo automáticamente). |
+| `VITE_TMDB_API_KEY` | Cliente (Pública) | Clave v3 de [themoviedb.org](https://www.themoviedb.org/settings/api). |
+| `VITE_SUPABASE_URL` | Cliente (Pública) | Project URL de [supabase.com](https://supabase.com/). |
+| `VITE_SUPABASE_ANON_KEY` | Cliente (Pública) | Clave anónima pública de Supabase. |
+| `VITE_GOOGLE_MAPS_API_KEY` | Cliente (Opcional) | Clave de Google Maps (si se omite, se activa el Modo Demo automáticamente). |
+| `GEMINI_API_KEY` | Servidor (Secreta) | Clave de Google AI Studio para el Agente Crítico de Arte y moderación. |
+| `OPENROUTER_API_KEY` | Servidor (Secreta) | Clave de OpenRouter para DeepSeek (Agente Comercial y Logística). |
+| `GROK_API_KEY` | Servidor (Opcional) | Clave de xAI Grok (si no se proporciona, el sistema usa automáticamente el motor de respaldo sin costo). |
+
+> [!IMPORTANT]
+> **Seguridad de Nivel Producción:** Las variables `GEMINI_API_KEY` y `OPENROUTER_API_KEY` **NO** llevan el prefijo `VITE_`. Se ejecutan exclusivamente en la Serverless Function `/api/chat`, lo que garantiza que **nunca viajen al navegador ni se puedan ver con F12 en el cliente**.
 
 ---
 

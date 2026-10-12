@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Key, Database, MapPin, Check, RefreshCw, Trash2, Info } from 'lucide-react';
+import { X, Key, Database, MapPin, Check, RefreshCw, Trash2, Info, Bot } from 'lucide-react';
 import { getConfig, saveConfigOverrides, clearConfigOverrides } from '../../core/config';
 
 interface ConfigModalProps {
@@ -13,6 +13,9 @@ export function ConfigModal({ isOpen, onClose, onConfigChanged }: ConfigModalPro
   const [supabaseUrl, setSupabaseUrl] = useState('');
   const [supabaseKey, setSupabaseKey] = useState('');
   const [googleMapsKey, setGoogleMapsKey] = useState('');
+  const [geminiKey, setGeminiKey] = useState('');
+  const [openrouterKey, setOpenrouterKey] = useState('');
+  const [grokKey, setGrokKey] = useState('');
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
@@ -22,6 +25,9 @@ export function ConfigModal({ isOpen, onClose, onConfigChanged }: ConfigModalPro
       setSupabaseUrl(config.supabaseUrl);
       setSupabaseKey(config.supabaseAnonKey);
       setGoogleMapsKey(config.googleMapsApiKey);
+      setGeminiKey(config.geminiApiKey);
+      setOpenrouterKey(config.openrouterApiKey);
+      setGrokKey(config.grokApiKey);
       setSavedSuccess(false);
     }
   }, [isOpen]);
@@ -35,6 +41,9 @@ export function ConfigModal({ isOpen, onClose, onConfigChanged }: ConfigModalPro
       supabaseUrl,
       supabaseAnonKey: supabaseKey,
       googleMapsApiKey: googleMapsKey,
+      geminiApiKey: geminiKey,
+      openrouterApiKey: openrouterKey,
+      grokApiKey: grokKey,
     });
     setSavedSuccess(true);
     if (onConfigChanged) onConfigChanged();
@@ -51,6 +60,9 @@ export function ConfigModal({ isOpen, onClose, onConfigChanged }: ConfigModalPro
     setSupabaseUrl(config.supabaseUrl);
     setSupabaseKey(config.supabaseAnonKey);
     setGoogleMapsKey(config.googleMapsApiKey);
+    setGeminiKey(config.geminiApiKey);
+    setOpenrouterKey(config.openrouterApiKey);
+    setGrokKey(config.grokApiKey);
     setSavedSuccess(true);
     if (onConfigChanged) onConfigChanged();
     setTimeout(() => setSavedSuccess(false), 1500);
@@ -140,6 +152,45 @@ export function ConfigModal({ isOpen, onClose, onConfigChanged }: ConfigModalPro
               value={googleMapsKey}
               onChange={(e) => setGoogleMapsKey(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-2">
+              <Bot className="w-3.5 h-3.5 text-indigo-400" /> Google Gemini API Key (Agente Crítico de Arte)
+            </label>
+            <input
+              type="password"
+              placeholder="Si está vacía se activa el Motor Autónomo (AI Studio)"
+              value={geminiKey}
+              onChange={(e) => setGeminiKey(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-2">
+              <Bot className="w-3.5 h-3.5 text-emerald-400" /> OpenRouter API Key (DeepSeek / IA China - Agente Financiero)
+            </label>
+            <input
+              type="password"
+              placeholder="sk-or-v1-... (soporta deepseek/deepseek-chat)"
+              value={openrouterKey}
+              onChange={(e) => setOpenrouterKey(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center gap-2">
+              <Bot className="w-3.5 h-3.5 text-amber-400" /> xAI Grok API Key (Agente Moderador / Juez)
+            </label>
+            <input
+              type="password"
+              placeholder="xai-... (O usa OpenRouter con x-ai/grok)"
+              value={grokKey}
+              onChange={(e) => setGrokKey(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
             />
           </div>
 

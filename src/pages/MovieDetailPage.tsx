@@ -10,6 +10,8 @@ import { CinemaMap } from '../components/map/CinemaMap';
 import { ReviewForm } from '../components/review/ReviewForm';
 import { ReviewList } from '../components/review/ReviewList';
 import { MovieDetailSkeleton } from '../components/common/LoadingSkeleton';
+import { MultiAgentPanel } from '../components/ai/MultiAgentPanel';
+import { MlRecommendationsSection } from '../components/ai/MlRecommendationsSection';
 
 export function MovieDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -77,13 +79,16 @@ export function MovieDetailPage() {
         onScrollToCinemas={scrollToCinemas}
       />
 
-      {/* 2. Reparto Principal */}
+      {/* 2. Sistema Multi-Agente & Machine Learning (Comité Asesor) */}
+      <MultiAgentPanel movie={movie} />
+
+      {/* 3. Reparto Principal */}
       <CastList cast={movie.cast} />
 
-      {/* 3. Tráiler Oficial de YouTube */}
+      {/* 4. Tráiler Oficial de YouTube */}
       <TrailerPlayer trailerUrl={movie.getYoutubeTrailerUrl()} title={movie.title} />
 
-      {/* 4. Módulo de Cines y Horarios (Google Maps / Demo) */}
+      {/* 5. Módulo de Cines y Horarios (Google Maps / Demo) */}
       <CinemaMap
         cinemas={cinemasWithShowtimes}
         userLocation={userLocation}
@@ -91,7 +96,10 @@ export function MovieDetailPage() {
         onRefreshLocation={refreshLocation}
       />
 
-      {/* 5. Sección Comunitaria de Críticas (Supabase) */}
+      {/* 6. Recomendaciones Similares por Machine Learning (k-NN) */}
+      <MlRecommendationsSection currentMovie={movie} />
+
+      {/* 7. Sección Comunitaria de Críticas (Supabase) */}
       <section className="space-y-6 pt-4 border-t border-slate-800/80">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* Formulario de Nueva Reseña */}

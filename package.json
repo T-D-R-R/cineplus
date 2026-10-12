@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate:dataset": "node scripts/generate_reviews_dataset.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.115.0",

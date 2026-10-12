@@ -377,6 +377,30 @@ export class TmdbService extends BaseApiService {
       return MOCK_MOVIES.map((m) => Movie.fromTmdbDto(m));
     }
   }
+
+  /**
+   * Obtiene películas filtradas por género utilizando el endpoint /discover de TMDb.
+   */
+  public async getMoviesByGenre(genreId: number, page = 1): Promise<Movie[]> {
+    const authQuery = this.getAuthQuery();
+    if (!authQuery) {
+      return MOCK_MOVIES.filter((m) => m.genres?.some((g) => g.id === genreId)).map((m) =>
+        Movie.fromTmdbDto(m)
+      );
+    }
+
+    try {
+      const data = await this.request<{ results: TmdbMovieDto[] }>(
+        `/discover/movie?${authQuery}&language=es-MX&with_genres=${genreId}&sort_by=popularity.desc&page=${page}`
+      );
+      return (data.results || []).map((dto) => Movie.fromTmdbDto(dto));
+    } catch (err) {
+      console.warn(`Error descubriendo películas por género ${genreId}:`, err);
+      return MOCK_MOVIES.filter((m) => m.genres?.some((g) => g.id === genreId)).map((m) =>
+        Movie.fromTmdbDto(m)
+      );
+    }
+  }
 }
 
 export const tmdbService = TmdbService.getInstance();

@@ -97,8 +97,11 @@ export interface SupabaseShowtimeRow {
 export interface SupabaseReviewRow {
   id: number;
   tmdb_movie_id: number;
+  titulo_pelicula?: string | null;
   nombre_usuario: string;
   comentario: string;
   puntaje: number;
+  sentimiento?: 'positivo' | 'negativo' | 'neutral' | string;
   creado_en: string;
 }
+

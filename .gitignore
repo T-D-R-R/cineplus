@@ -10,9 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-*.local
+# Environment variables (NEVER COMMIT KEYS TO GIT)
+.env
 .env.local
 .env.*.local
+*.local
+*.env
 
 # Editor directories and files
 .vscode/*

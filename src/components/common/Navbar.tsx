@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Clapperboard, Flame, Trophy, Calendar, Settings, Sparkles, Menu, X } from 'lucide-react';
+import { Clapperboard, Flame, Trophy, Calendar, Settings, Sparkles, Menu, X, Bot } from 'lucide-react';
 import { ConfigModal } from './ConfigModal';
-import { isTmdbConfigured, isSupabaseConfigured } from '../../core/config';
+import { isTmdbConfigured, isSupabaseConfigured, isGeminiConfigured } from '../../core/config';
 
 export function Navbar() {
   const location = useLocation();
@@ -17,6 +17,7 @@ export function Navbar() {
 
   const tmdbOk = isTmdbConfigured();
   const supabaseOk = isSupabaseConfigured();
+  const geminiOk = isGeminiConfigured();
 
   return (
     <>
@@ -81,6 +82,18 @@ export function Navbar() {
               >
                 <span className={`w-1.5 h-1.5 rounded-full ${supabaseOk ? 'bg-emerald-400' : 'bg-slate-400'}`} />
                 Supabase {supabaseOk ? 'Sync' : 'Local'}
+              </span>
+
+              <span
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                  geminiOk
+                    ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400'
+                    : 'bg-indigo-950/40 border-indigo-800/60 text-indigo-300'
+                }`}
+                title={geminiOk ? 'Google Gemini API Conectada' : 'Multi-Agente en Modo Heurístico Local'}
+              >
+                <Bot className="w-3 h-3 text-indigo-400" />
+                IA {geminiOk ? 'Gemini' : 'Multi-Agente'}
               </span>
             </div>
 
