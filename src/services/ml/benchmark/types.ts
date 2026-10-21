@@ -83,6 +83,7 @@ export interface MovieMlAnalysisResult {
     predictedSentiment: SentimentCategory;
     confidence: number;
     algorithmUsed: string;
+    isSimulated?: boolean;
   }>;
 }
 

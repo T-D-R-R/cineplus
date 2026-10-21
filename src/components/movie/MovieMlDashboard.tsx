@@ -25,6 +25,15 @@ interface MovieMlDashboardProps {
   reviews: Review[];
 }
 
+interface InjectedReviewItem {
+  id: string | number;
+  userName: string;
+  comment: string;
+  rating: number;
+  sentiment: string;
+  isSimulated: boolean;
+}
+
 // Reseñas sintéticas para pruebas rápidas del docente
 const DEMO_PRESET_REVIEWS = {
   positive: [
@@ -55,13 +64,8 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
   const numericId = Number(movieId) || 0;
 
   // Reseñas adicionales inyectadas temporalmente en memoria (para pruebas del docente)
-  const [injectedReviews, setInjectedReviews] = useState<Array<{
-    id?: string | number;
-    userName?: string;
-    comment: string;
-    rating?: number;
-    sentiment?: string;
-  }>>([]);
+  // IMPORTANTE: Se guardan ÚNICAMENTE en estado React (memoria RAM), NUNCA en Supabase
+  const [injectedReviews, setInjectedReviews] = useState<InjectedReviewItem[]>([]);
 
   // Estado del análisis de Machine Learning
   const [analysis, setAnalysis] = useState<MovieMlAnalysisResult | null>(null);
@@ -79,7 +83,7 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
 
   // Función principal para evaluar los 5 modelos sobre esta película
   const runMovieEvaluation = (customInjected = injectedReviews) => {
-    // Combinar reseñas de Supabase/props con las inyectadas
+    // Combinar estrictamente reseñas reales de Supabase + las simuladas temporalmente por el docente
     const allUserReviews = [
       ...customInjected,
       ...reviews.map((r) => ({
@@ -88,13 +92,14 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
         comment: r.comment,
         rating: r.rating,
         sentiment: r.sentiment,
+        isSimulated: false,
       })),
     ];
 
     const result = mlBenchmarkService.evaluateMovieDataset(numericId, movieTitle, allUserReviews);
 
     // Calcular delta con respecto a la evaluación anterior
-    if (prevAcceptanceRef.current !== null && prevAcceptanceRef.current !== result.acceptanceRate) {
+    if (prevAcceptanceRef.current !== null && prevAcceptanceRef.current !== result.acceptanceRate && result.totalReviews > 0) {
       const diff = Number((result.acceptanceRate - prevAcceptanceRef.current).toFixed(1));
       setAcceptanceDelta({
         prev: prevAcceptanceRef.current,
@@ -139,14 +144,19 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
     }, 850);
   };
 
-  // Inyectar reseñas sintéticas (Herramienta para el Docente)
+  // Inyectar reseñas sintéticas (Herramienta aislada en memoria para el Docente)
   const handleInjectReviews = (type: 'positive' | 'negative' | 'varied') => {
-    const toAdd = DEMO_PRESET_REVIEWS[type];
+    const toAdd: InjectedReviewItem[] = DEMO_PRESET_REVIEWS[type].map((r, i) => ({
+      ...r,
+      id: `sim-${Date.now()}-${i}`,
+      isSimulated: true,
+    }));
     const updated = [...toAdd, ...injectedReviews];
     setInjectedReviews(updated);
     runMovieEvaluation(updated);
   };
 
+  // Eliminar reseñas sintéticas y volver a las reseñas reales de la base de datos
   const handleResetReviews = () => {
     setInjectedReviews([]);
     setAcceptanceDelta(null);
@@ -285,57 +295,74 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
               <Flame className="w-4 h-4 text-amber-400" /> Aceptación Comunitaria
             </span>
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${
-                isHigh
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : isMedium
-                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                  : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-              }`}
-            >
-              {isHigh ? 'Aclamación' : isMedium ? 'Dividida' : 'Desfavorable'}
-            </span>
+            {totalReviews > 0 ? (
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase ${
+                  isHigh
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                    : isMedium
+                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                }`}
+              >
+                {isHigh ? 'Aclamación' : isMedium ? 'Dividida' : 'Desfavorable'}
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-800 text-slate-400">
+                Sin Votos
+              </span>
+            )}
           </div>
 
-          <div className="flex items-baseline gap-3">
-            <span
-              className={`text-4xl md:text-5xl font-black tracking-tight ${
-                isHigh ? 'text-emerald-400' : isMedium ? 'text-amber-400' : 'text-rose-400'
-              }`}
-            >
-              {acceptanceRate}%
-            </span>
-            <span className="text-xs text-slate-400 font-medium">
-              Favorable ({sentimentBreakdown.positive} de {totalReviews} reseñas)
-            </span>
-          </div>
+          {totalReviews === 0 ? (
+            <div className="py-4 text-center space-y-2">
+              <div className="text-2xl font-bold text-slate-300">0% Aceptación</div>
+              <p className="text-xs text-slate-500">
+                Aún no hay reseñas registradas para esta película. Escribe una reseña abajo o usa los botones de simulación.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-baseline gap-3">
+                <span
+                  className={`text-4xl md:text-5xl font-black tracking-tight ${
+                    isHigh ? 'text-emerald-400' : isMedium ? 'text-amber-400' : 'text-rose-400'
+                  }`}
+                >
+                  {acceptanceRate}%
+                </span>
+                <span className="text-xs text-slate-400 font-medium">
+                  Favorable ({sentimentBreakdown.positive} de {totalReviews} reseñas)
+                </span>
+              </div>
 
-          {/* Barra de Distribución Tricolor */}
-          <div className="space-y-1.5">
-            <div className="w-full h-3 rounded-full bg-slate-800/80 overflow-hidden flex">
-              <div
-                style={{ width: `${sentimentBreakdown.positivePct}%` }}
-                className="bg-emerald-500 transition-all duration-500"
-                title={`Positivo: ${sentimentBreakdown.positivePct}%`}
-              />
-              <div
-                style={{ width: `${sentimentBreakdown.neutralPct}%` }}
-                className="bg-amber-500 transition-all duration-500"
-                title={`Neutral: ${sentimentBreakdown.neutralPct}%`}
-              />
-              <div
-                style={{ width: `${sentimentBreakdown.negativePct}%` }}
-                className="bg-rose-500 transition-all duration-500"
-                title={`Negativo: ${sentimentBreakdown.negativePct}%`}
-              />
-            </div>
-            <div className="flex justify-between text-[11px] text-slate-400 font-medium">
-              <span className="text-emerald-400 font-semibold">{sentimentBreakdown.positivePct}% Positivas</span>
-              <span className="text-amber-400 font-semibold">{sentimentBreakdown.neutralPct}% Neutrales</span>
-              <span className="text-rose-400 font-semibold">{sentimentBreakdown.negativePct}% Negativas</span>
-            </div>
-          </div>
+              {/* Barra de Distribución Tricolor */}
+              <div className="space-y-1.5">
+                <div className="w-full h-3 rounded-full bg-slate-800/80 overflow-hidden flex">
+                  <div
+                    style={{ width: `${sentimentBreakdown.positivePct}%` }}
+                    className="bg-emerald-500 transition-all duration-500"
+                    title={`Positivo: ${sentimentBreakdown.positivePct}%`}
+                  />
+                  <div
+                    style={{ width: `${sentimentBreakdown.neutralPct}%` }}
+                    className="bg-amber-500 transition-all duration-500"
+                    title={`Neutral: ${sentimentBreakdown.neutralPct}%`}
+                  />
+                  <div
+                    style={{ width: `${sentimentBreakdown.negativePct}%` }}
+                    className="bg-rose-500 transition-all duration-500"
+                    title={`Negativo: ${sentimentBreakdown.negativePct}%`}
+                  />
+                </div>
+                <div className="flex justify-between text-[11px] text-slate-400 font-medium">
+                  <span className="text-emerald-400 font-semibold">{sentimentBreakdown.positivePct}% Positivas</span>
+                  <span className="text-amber-400 font-semibold">{sentimentBreakdown.neutralPct}% Neutrales</span>
+                  <span className="text-rose-400 font-semibold">{sentimentBreakdown.negativePct}% Negativas</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Card 2: Algoritmo Campeón Actual */}
@@ -381,12 +408,26 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
               <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <BarChart3 className="w-4 h-4 text-cyan-400" /> Volumen de Críticas
               </span>
-              <span className="text-xs font-mono font-bold text-slate-300">
+              <span className="text-xs font-mono font-bold text-amber-400">
                 {totalReviews} analizadas
               </span>
             </div>
-            <p className="text-xs text-slate-400 mt-2">
-              Prueba cómo cambia el algoritmo ganador inyectando reseñas masivas variadas:
+
+            <div className="mt-2 text-xs text-slate-400 space-y-1">
+              <div className="flex justify-between">
+                <span>Críticas reales (Comunidad):</span>
+                <span className="font-bold text-white">{reviews.length}</span>
+              </div>
+              {injectedReviews.length > 0 && (
+                <div className="flex justify-between text-purple-300">
+                  <span>Pruebas simuladas (Memoria):</span>
+                  <span className="font-bold">+{injectedReviews.length}</span>
+                </div>
+              )}
+            </div>
+
+            <p className="text-[11px] text-slate-500 mt-2 italic">
+              *Las pruebas con los botones viven en memoria RAM local; NO se guardan en la base de datos de usuarios.
             </p>
           </div>
 
@@ -396,21 +437,21 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
               <button
                 onClick={() => handleInjectReviews('positive')}
                 className="px-2 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-colors text-center"
-                title="Inyecta 5 críticas sumamente positivas"
+                title="Inyecta 5 críticas sumamente positivas en memoria"
               >
                 +5 Positivas
               </button>
               <button
                 onClick={() => handleInjectReviews('varied')}
                 className="px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors text-center"
-                title="Inyecta 6 críticas mixtas para retar a SVM y k-NN"
+                title="Inyecta 6 críticas mixtas en memoria para retar a SVM y k-NN"
               >
                 +6 Variadas
               </button>
               <button
                 onClick={() => handleInjectReviews('negative')}
                 className="px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-colors text-center"
-                title="Inyecta 5 críticas negativas"
+                title="Inyecta 5 críticas negativas en memoria"
               >
                 +5 Negativas
               </button>
@@ -419,9 +460,9 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
             {injectedReviews.length > 0 && (
               <button
                 onClick={handleResetReviews}
-                className="w-full text-[11px] text-slate-400 hover:text-white flex items-center justify-center gap-1 py-1 rounded border border-dashed border-slate-700 transition-colors"
+                className="w-full text-[11px] text-purple-300 hover:text-white flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-colors font-semibold"
               >
-                <RefreshCw className="w-3 h-3" /> Limpiar {injectedReviews.length} reseñas simuladas
+                <RefreshCw className="w-3 h-3" /> Limpiar {injectedReviews.length} pruebas (Volver a {reviews.length} reales)
               </button>
             )}
           </div>
@@ -515,50 +556,63 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
             </div>
 
             {/* Muestra de Predicciones del Modelo Campeón en las Críticas */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                  <Zap className="w-3.5 h-3.5 text-amber-400" />
-                  Muestras de Inferencia Recientes ({predictions.slice(0, 4).length} de {predictions.length})
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  Clasificado por: <span className="text-amber-400 font-mono">{championModel.modelName}</span>
-                </span>
-              </div>
+            {predictions.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                    Muestras de Inferencia Recientes ({predictions.slice(0, 4).length} de {predictions.length})
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    Clasificado por: <span className="text-amber-400 font-mono">{championModel.modelName}</span>
+                  </span>
+                </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {predictions.slice(0, 4).map((p, i) => {
-                  const isPos = p.predictedSentiment === 'positivo';
-                  const isNeg = p.predictedSentiment === 'negativo';
-                  return (
-                    <div
-                      key={p.id || i}
-                      className="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2 text-xs"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-slate-300 truncate max-w-[160px]">
-                          {p.userName}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                            isPos
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                              : isNeg
-                              ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                          }`}
-                        >
-                          {p.predictedSentiment} ({p.confidence}%)
-                        </span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {predictions.slice(0, 4).map((p, i) => {
+                    const isPos = p.predictedSentiment === 'positivo';
+                    const isNeg = p.predictedSentiment === 'negativo';
+                    return (
+                      <div
+                        key={p.id || i}
+                        className="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2 text-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5 truncate max-w-[170px]">
+                            <span className="font-semibold text-slate-300 truncate">
+                              {p.userName}
+                            </span>
+                            {p.isSimulated ? (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
+                                Simulación
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
+                                Real
+                              </span>
+                            )}
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                              isPos
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                                : isNeg
+                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                            }`}
+                          >
+                            {p.predictedSentiment} ({p.confidence}%)
+                          </span>
+                        </div>
+                        <p className="text-slate-400 line-clamp-2 italic">
+                          &ldquo;{p.comment}&rdquo;
+                        </p>
                       </div>
-                      <p className="text-slate-400 line-clamp-2 italic">
-                        &ldquo;{p.comment}&rdquo;
-                      </p>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
