@@ -594,13 +594,21 @@ export function AuthModal() {
                   <KeyRound className="w-4 h-4" /> Verificar Código OTP
                 </button>
 
-                <div className="flex justify-center">
+                <div className="flex flex-col items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSendTelegramOtp}
+                    disabled={submitting}
+                    className="text-xs text-sky-400 hover:text-sky-300 transition-colors flex items-center gap-1.5 cursor-pointer font-semibold"
+                  >
+                    <Send className="w-3.5 h-3.5" /> {submitting ? 'Enviando a Telegram...' : '📲 Reenviar código a mi Telegram'}
+                  </button>
                   <button
                     type="button"
                     onClick={() => setResetStep('select-channel')}
                     className="text-xs text-slate-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
                   >
-                    <RefreshCw className="w-3 h-3" /> Reintentar o cambiar método de envío
+                    <RefreshCw className="w-3 h-3" /> Cambiar método de envío
                   </button>
                 </div>
               </form>

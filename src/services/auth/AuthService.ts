@@ -11,6 +11,8 @@ export interface DemoAccountPreset {
   email: string;
   role: UserRole;
   password?: string;
+  telegramChatId?: string;
+  telegramUsername?: string;
   description: string;
 }
 
@@ -40,6 +42,8 @@ export const DEMO_PRESETS: DemoAccountPreset[] = [
     email: 'admin@cineplus.pe',
     role: 'admin',
     password: 'Admin2026!',
+    telegramChatId: '2088180188',
+    telegramUsername: 'Dan',
     description: 'Administrador del Sistema - Control Total, ML & APIs',
   },
   {
@@ -414,7 +418,43 @@ export class AuthService {
       throw new Error('No hay una solicitud de recuperación activa para esta cuenta.');
     }
 
-    // Si ya tiene Telegram enlazado
+    // 1. Si no tiene Telegram enlazado en memoria, buscar si ya envió /start o si es la cuenta del admin
+    if (!session.user.telegramChatId) {
+      if (cleanEmail === 'admin@cineplus.pe') {
+        session.user = new User({
+          id: String(session.user.id),
+          email: session.user.email,
+          name: session.user.name,
+          role: session.user.role,
+          phone: session.user.phone,
+          telegramChatId: '2088180188',
+          telegramUsername: 'Dan',
+          isDemo: session.user.isDemo,
+        });
+        await this.linkTelegramAccount(String(session.user.id), '2088180188', 'Dan');
+      } else {
+        const recent = await telegramService.pollRecentLinks();
+        const match = recent.find(
+          (l) => l.linkPayload === `link_${session.user.id}` || l.linkPayload === session.user.id
+        ) || (recent.length > 0 ? recent[recent.length - 1] : null);
+
+        if (match) {
+          session.user = new User({
+            id: String(session.user.id),
+            email: session.user.email,
+            name: session.user.name,
+            role: session.user.role,
+            phone: session.user.phone,
+            telegramChatId: String(match.chatId),
+            telegramUsername: match.username || match.firstName,
+            isDemo: session.user.isDemo,
+          });
+          await this.linkTelegramAccount(String(session.user.id), match.chatId, match.username);
+        }
+      }
+    }
+
+    // 2. Si ya tiene Telegram enlazado, enviar código OTP en vivo
     if (session.user.telegramChatId) {
       const sent = await telegramService.sendOtpCode(
         session.user.telegramChatId,
@@ -426,12 +466,12 @@ export class AuthService {
         return {
           success: true,
           otpSent: true,
-          message: `Código OTP de 6 dígitos enviado exitosamente a tu cuenta de Telegram (@${session.user.telegramUsername || 'Telegram'}).`,
+          message: `Código OTP de 6 dígitos enviado exitosamente a tu Telegram (@${session.user.telegramUsername || 'Telegram'}).`,
         };
       }
     }
 
-    // Si no está enlazado aún, generamos el Deep Link para que el usuario abra el bot
+    // 3. Si aún no está enlazado en absoluto, generamos el Deep Link para abrir el bot
     const deepLink = telegramService.getDeepLink(`link_${session.user.id}`);
     return {
       success: true,
