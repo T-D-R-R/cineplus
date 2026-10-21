@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { LogIn, LogOut, ShieldCheck, ChevronDown, Sparkles } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, ChevronDown, Sparkles, Smartphone, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { telegramService } from '../../services/telegram/TelegramService';
 
 export function UserMenu() {
-  const { user, isAuthenticated, openAuthModal, logout } = useAuth();
+  const { user, isAuthenticated, openAuthModal, logout, checkAndSyncTelegram } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -97,6 +98,30 @@ export function UserMenu() {
           </div>
 
           <div className="space-y-1">
+            {user.hasTelegramLinked() ? (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-sky-400 bg-sky-950/40 border border-sky-500/30">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-sky-400" />
+                <span className="truncate">Telegram: @{user.telegramUsername || 'Conectado'}</span>
+              </div>
+            ) : (
+              <button
+                onClick={async () => {
+                  window.open(telegramService.getDeepLink(`link_${user.id}`), '_blank');
+                  setTimeout(() => {
+                    checkAndSyncTelegram().catch(() => {});
+                  }, 4000);
+                }}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-sky-500/10 hover:text-sky-200 transition-colors cursor-pointer text-left"
+                title="Vincular con @CinePlusSeguridad_bot para recibir códigos OTP y alertas"
+              >
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-sky-400 shrink-0" />
+                  <span>Vincular Telegram</span>
+                </div>
+                <ExternalLink className="w-3.5 h-3.5 text-sky-400/70" />
+              </button>
+            )}
+
             <button
               onClick={() => {
                 setIsOpen(false);

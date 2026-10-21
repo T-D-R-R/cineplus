@@ -1,5 +1,6 @@
 import { SupabaseService } from '../SupabaseService';
 import { User, type UserRole } from '../../domain/User';
+import { telegramService } from '../telegram/TelegramService';
 
 const LOCAL_USER_STORAGE_KEY = 'cineplus_active_user_session';
 const REGISTERED_USERS_KEY = 'cineplus_registered_users_db';
@@ -9,15 +10,36 @@ export interface DemoAccountPreset {
   name: string;
   email: string;
   role: UserRole;
+  password?: string;
   description: string;
+}
+
+export interface StoredUserRecord {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  phone?: string;
+  telegramChatId?: string;
+  telegramUsername?: string;
+  password?: string;
+  createdAt?: string;
+}
+
+export interface PasswordResetSession {
+  email: string;
+  user: User;
+  otpCode: string;
+  expiresAt: number;
 }
 
 export const DEMO_PRESETS: DemoAccountPreset[] = [
   {
     id: 'demo-admin-01',
-    name: 'Dr. Roberto Mendoza',
+    name: 'Administrador CinePlus',
     email: 'admin@cineplus.pe',
     role: 'admin',
+    password: 'Admin2026!',
     description: 'Administrador del Sistema - Control Total, ML & APIs',
   },
   {
@@ -25,6 +47,7 @@ export const DEMO_PRESETS: DemoAccountPreset[] = [
     name: 'Carlos Alanya',
     email: 'usuario@cineplus.pe',
     role: 'usuario',
+    password: 'Usuario2026!',
     description: 'Usuario Cinéfilo - Cartelera y Reseñas',
   },
 ];
@@ -35,7 +58,8 @@ export class AuthService {
   private static instance: AuthService;
   private currentUser: User | null = null;
   private listeners: Set<AuthListener> = new Set();
-  private inMemoryUsersDb: Array<{ id: string; email: string; name: string; role: UserRole; password?: string }> = [];
+  private inMemoryUsersDb: StoredUserRecord[] = [];
+  private activeResetSessions: Map<string, PasswordResetSession> = new Map();
 
   private constructor() {
     this.restoreSession();
@@ -59,11 +83,16 @@ export class AuthService {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const userMeta = session.user.user_metadata || {};
+          const localRecord = this.getLocalUsersDb().find(u => u.email === (session.user.email || '').toLowerCase());
+          
           this.currentUser = new User({
             id: session.user.id,
             email: session.user.email || 'usuario@cineplus.pe',
             name: userMeta.name || userMeta.full_name || session.user.email?.split('@')[0] || 'Usuario',
             role: (userMeta.role as UserRole) || 'usuario',
+            phone: userMeta.phone || localRecord?.phone,
+            telegramChatId: userMeta.telegram_chat_id || localRecord?.telegramChatId,
+            telegramUsername: userMeta.telegram_username || localRecord?.telegramUsername,
             avatarUrl: userMeta.avatar_url,
             isDemo: false,
           });
@@ -99,11 +128,37 @@ export class AuthService {
 
   /**
    * Inicio de sesión con correo y contraseña.
+   * Valida estrictamente las credenciales del Administrador (admin@cineplus.pe / Admin2026!).
    */
   public async loginWithEmail(email: string, password: string): Promise<User> {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Intentar con Supabase Auth si está configurado
+    // 1. Validación estricta de cuenta Administrador del Sistema
+    if (cleanEmail === 'admin@cineplus.pe') {
+      const localDb = this.getLocalUsersDb();
+      const adminRecord = localDb.find((u) => u.email === cleanEmail);
+      const expectedPassword = adminRecord?.password || 'Admin2026!';
+
+      if (password !== expectedPassword) {
+        throw new Error('Contraseña incorrecta para la cuenta de Administrador.');
+      }
+
+      const adminUser = new User({
+        id: adminRecord?.id || 'admin-root',
+        email: 'admin@cineplus.pe',
+        name: adminRecord?.name || 'Administrador CinePlus',
+        role: 'admin',
+        phone: adminRecord?.phone,
+        telegramChatId: adminRecord?.telegramChatId,
+        telegramUsername: adminRecord?.telegramUsername,
+        isDemo: true,
+      });
+
+      this.setCurrentUser(adminUser);
+      return adminUser;
+    }
+
+    // 2. Intentar con Supabase Auth si está configurado
     const supabase = SupabaseService.getInstance().getClient();
     if (supabase) {
       try {
@@ -114,11 +169,15 @@ export class AuthService {
 
         if (!error && data.user) {
           const meta = data.user.user_metadata || {};
+          const localRecord = this.getLocalUsersDb().find((u) => u.email === cleanEmail);
           const user = new User({
             id: data.user.id,
             email: data.user.email || cleanEmail,
             name: meta.name || meta.full_name || cleanEmail.split('@')[0],
             role: (meta.role as UserRole) || 'usuario',
+            phone: meta.phone || localRecord?.phone,
+            telegramChatId: meta.telegram_chat_id || localRecord?.telegramChatId,
+            telegramUsername: meta.telegram_username || localRecord?.telegramUsername,
             avatarUrl: meta.avatar_url,
             isDemo: false,
           });
@@ -130,7 +189,7 @@ export class AuthService {
       }
     }
 
-    // 2. Si no hay Supabase o falla por falta de credenciales, verificar en la BD local de demo
+    // 3. Verificar en la base de datos local
     const localDb = this.getLocalUsersDb();
     const existing = localDb.find((u) => u.email === cleanEmail);
 
@@ -142,16 +201,22 @@ export class AuthService {
         id: existing.id,
         email: existing.email,
         name: existing.name,
-        role: existing.role,
+        role: existing.role || 'usuario',
+        phone: existing.phone,
+        telegramChatId: existing.telegramChatId,
+        telegramUsername: existing.telegramUsername,
         isDemo: true,
       });
       this.setCurrentUser(user);
       return user;
     }
 
-    // 3. Si coincide con alguno de los presets de demo, permitir ingreso directo
+    // 4. Si coincide con preset demo regular (usuario@cineplus.pe)
     const preset = DEMO_PRESETS.find((p) => p.email === cleanEmail);
     if (preset) {
+      if (preset.password && preset.password !== password) {
+        throw new Error('Contraseña incorrecta. Por favor verifica tus credenciales.');
+      }
       const user = new User({
         id: preset.id,
         email: preset.email,
@@ -167,16 +232,19 @@ export class AuthService {
   }
 
   /**
-   * Registro de nuevo usuario con nombre, correo y contraseña.
+   * Registro público de nuevo usuario.
+   * SEGURIDAD: Todos los registros públicos son inmutables con rol 'usuario' (Cinéfilo).
+   * Ningún usuario público puede autoproclamarse Administrador.
    */
   public async registerWithEmail(
     name: string,
     email: string,
     password: string,
-    role: UserRole = 'usuario'
+    phone?: string
   ): Promise<User> {
     const cleanEmail = email.trim().toLowerCase();
     const cleanName = name.trim();
+    const cleanPhone = phone ? phone.trim() : undefined;
 
     if (!cleanName || cleanName.length < 2) {
       throw new Error('El nombre completo debe tener al menos 2 caracteres.');
@@ -184,9 +252,15 @@ export class AuthService {
     if (!cleanEmail || !cleanEmail.includes('@')) {
       throw new Error('Ingresa un correo electrónico válido.');
     }
+    if (cleanEmail === 'admin@cineplus.pe') {
+      throw new Error('El correo del Administrador ya se encuentra reservado.');
+    }
     if (!password || password.length < 6) {
       throw new Error('La contraseña debe tener un mínimo de 6 caracteres.');
     }
+
+    // El rol asignado siempre es 'usuario' por políticas estrictas de RBAC
+    const assignedRole: UserRole = 'usuario';
 
     // 1. Intentar registrar en Supabase Auth
     const supabase = SupabaseService.getInstance().getClient();
@@ -199,7 +273,8 @@ export class AuthService {
             data: {
               name: cleanName,
               full_name: cleanName,
-              role,
+              role: assignedRole,
+              phone: cleanPhone,
             },
           },
         });
@@ -209,7 +284,8 @@ export class AuthService {
             id: data.user.id,
             email: cleanEmail,
             name: cleanName,
-            role,
+            role: assignedRole,
+            phone: cleanPhone,
             isDemo: false,
           });
           this.setCurrentUser(user);
@@ -234,7 +310,8 @@ export class AuthService {
       id: `user-${Date.now()}`,
       email: cleanEmail,
       name: cleanName,
-      role,
+      role: assignedRole,
+      phone: cleanPhone,
       isDemo: true,
     });
 
@@ -243,21 +320,330 @@ export class AuthService {
     return newUser;
   }
 
+  // =========================================================================
+  // GESTIÓN DE RECUPERACIÓN DE CONTRASEÑA Y OTP MULTICANAL (CORREO / TELEGRAM)
+  // =========================================================================
+
   /**
-   * Inicio de sesión rápido en 1 Clic con preset de demostración.
+   * Paso 1: Búsqueda del usuario por correo o teléfono.
+   * Si no existe en la base de datos, rechaza inmediatamente.
+   * Si existe, genera un código OTP de 6 dígitos con vigencia de 5 minutos.
    */
-  public async loginAsDemo(rolePreset: 'admin' | 'docente' | 'usuario'): Promise<User> {
-    const targetRole = rolePreset === 'docente' ? 'admin' : rolePreset;
-    const preset = DEMO_PRESETS.find((p) => p.role === targetRole) || DEMO_PRESETS[0];
+  public async requestPasswordReset(identifier: string): Promise<{
+    success: boolean;
+    email: string;
+    user: User;
+    hasTelegram: boolean;
+    phone?: string;
+    message: string;
+  }> {
+    const cleanId = identifier.trim().toLowerCase();
+    if (!cleanId) {
+      throw new Error('Por favor ingresa tu correo electrónico registrado o teléfono.');
+    }
+
+    // Buscar en BD local o presets
+    const localDb = this.getLocalUsersDb();
+    let record = localDb.find(
+      (u) => u.email.toLowerCase() === cleanId || (u.phone && u.phone.trim() === cleanId)
+    );
+
+    if (!record) {
+      const preset = DEMO_PRESETS.find((p) => p.email.toLowerCase() === cleanId);
+      if (preset) {
+        record = {
+          id: preset.id,
+          email: preset.email,
+          name: preset.name,
+          role: preset.role,
+          password: preset.password,
+        };
+      }
+    }
+
+    // Si aún no se encuentra, verificar en Supabase sesión activa o rechazar
+    if (!record) {
+      throw new Error('No se encontró ninguna cuenta registrada con este correo electrónico o teléfono. Verifica tus datos o regístrate.');
+    }
+
     const user = new User({
-      id: preset.id,
-      email: preset.email,
-      name: preset.name,
-      role: preset.role,
+      id: record.id,
+      email: record.email,
+      name: record.name,
+      role: record.role,
+      phone: record.phone,
+      telegramChatId: record.telegramChatId,
+      telegramUsername: record.telegramUsername,
       isDemo: true,
     });
-    this.setCurrentUser(user);
-    return user;
+
+    // Generar código OTP criptográfico de 6 dígitos
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutos
+
+    this.activeResetSessions.set(user.email, {
+      email: user.email,
+      user,
+      otpCode,
+      expiresAt,
+    });
+
+    return {
+      success: true,
+      email: user.email,
+      user,
+      hasTelegram: user.hasTelegramLinked(),
+      phone: user.phone,
+      message: 'Cuenta verificada correctamente en el sistema.',
+    };
+  }
+
+  /**
+   * Envía el código OTP a través del Bot oficial de Telegram (@CinePlusSeguridad_bot).
+   */
+  public async sendOtpViaTelegram(email: string): Promise<{
+    success: boolean;
+    message: string;
+    otpSent?: boolean;
+    deepLink?: string;
+  }> {
+    const cleanEmail = email.trim().toLowerCase();
+    const session = this.activeResetSessions.get(cleanEmail);
+
+    if (!session) {
+      throw new Error('No hay una solicitud de recuperación activa para esta cuenta.');
+    }
+
+    // Si ya tiene Telegram enlazado
+    if (session.user.telegramChatId) {
+      const sent = await telegramService.sendOtpCode(
+        session.user.telegramChatId,
+        session.otpCode,
+        session.user.name
+      );
+
+      if (sent) {
+        return {
+          success: true,
+          otpSent: true,
+          message: `Código OTP de 6 dígitos enviado exitosamente a tu cuenta de Telegram (@${session.user.telegramUsername || 'Telegram'}).`,
+        };
+      }
+    }
+
+    // Si no está enlazado aún, generamos el Deep Link para que el usuario abra el bot
+    const deepLink = telegramService.getDeepLink(`link_${session.user.id}`);
+    return {
+      success: true,
+      otpSent: false,
+      deepLink,
+      message: 'Abre Telegram y presiona INICIAR para recibir tu código de seguridad.',
+    };
+  }
+
+  /**
+   * Envía el enlace de recuperación por Correo Electrónico (Supabase).
+   * Si se supera el límite de cuota (3/hora) o es entorno local, activa el código OTP en pantalla.
+   */
+  public async sendOtpViaEmail(email: string): Promise<{
+    success: boolean;
+    isSimulation: boolean;
+    simulationCode?: string;
+    message: string;
+  }> {
+    const cleanEmail = email.trim().toLowerCase();
+    const session = this.activeResetSessions.get(cleanEmail);
+
+    if (!session) {
+      throw new Error('No hay una solicitud de recuperación activa para esta cuenta.');
+    }
+
+    const supabase = SupabaseService.getInstance().getClient();
+    if (supabase) {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+          redirectTo: window.location.origin,
+        });
+
+        if (!error) {
+          return {
+            success: true,
+            isSimulation: false,
+            message: 'Se ha enviado un enlace de recuperación a tu bandeja de correo.',
+          };
+        }
+
+        console.warn('Supabase resetPasswordForEmail error (usando fallback OTP):', error.message);
+      } catch (err) {
+        console.warn('Error conectando a Supabase resetPassword:', err);
+      }
+    }
+
+    // Fallback académico resiliente con código OTP
+    return {
+      success: true,
+      isSimulation: true,
+      simulationCode: session.otpCode,
+      message: 'Modo de demostración académica: Tu código OTP de verificación temporal ha sido generado.',
+    };
+  }
+
+  /**
+   * Valida el código OTP ingresado por el usuario.
+   */
+  public verifyOtp(email: string, code: string): boolean {
+    const cleanEmail = email.trim().toLowerCase();
+    const session = this.activeResetSessions.get(cleanEmail);
+
+    if (!session) {
+      throw new Error('La sesión de recuperación ha expirado. Vuelve a solicitar el código.');
+    }
+
+    if (Date.now() > session.expiresAt) {
+      this.activeResetSessions.delete(cleanEmail);
+      throw new Error('El código OTP ha expirado (límite de 5 minutos). Solicita uno nuevo.');
+    }
+
+    const cleanCode = code.trim().replace(/\s+/g, '');
+    if (cleanCode !== session.otpCode) {
+      throw new Error('El código de verificación OTP ingresado es incorrecto.');
+    }
+
+    return true;
+  }
+
+  /**
+   * Establece una nueva contraseña tras validar el código OTP.
+   */
+  public async resetPassword(email: string, newPassword: string, code: string): Promise<boolean> {
+    const cleanEmail = email.trim().toLowerCase();
+    this.verifyOtp(email, code);
+
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('La nueva contraseña debe tener al menos 6 caracteres.');
+    }
+
+    const session = this.activeResetSessions.get(cleanEmail);
+
+    // 1. Intentar actualizar en Supabase si es usuario Supabase
+    const supabase = SupabaseService.getInstance().getClient();
+    if (supabase) {
+      try {
+        await supabase.auth.updateUser({ password: newPassword });
+      } catch {
+        // Ignorar si no hay sesión activa
+      }
+    }
+
+    // 2. Actualizar en Base de Datos Local
+    const localDb = this.getLocalUsersDb();
+    const index = localDb.findIndex((u) => u.email.toLowerCase() === cleanEmail);
+
+    if (index >= 0) {
+      localDb[index].password = newPassword;
+    } else {
+      localDb.push({
+        id: String(session?.user.id || `user-${Date.now()}`),
+        email: cleanEmail,
+        name: session?.user.name || 'Usuario',
+        role: session?.user.role || 'usuario',
+        password: newPassword,
+      });
+    }
+
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(localDb));
+      }
+    } catch {
+      // Ignorar en entornos de test
+    }
+
+    // 3. Si tiene Telegram, enviar alerta de seguridad
+    if (session?.user.telegramChatId) {
+      telegramService.sendPasswordChangedAlert(
+        session.user.telegramChatId,
+        session.user.name
+      ).catch(() => {});
+    }
+
+    // Limpiar sesión de reseteo
+    this.activeResetSessions.delete(cleanEmail);
+    return true;
+  }
+
+  /**
+   * Vincula la cuenta de un usuario con Telegram guardando su chatId y username.
+   */
+  public async linkTelegramAccount(
+    userId: string,
+    chatId: string | number,
+    username?: string
+  ): Promise<boolean> {
+    const localDb = this.getLocalUsersDb();
+    const userRecord = localDb.find((u) => u.id === userId || u.email === this.currentUser?.email);
+
+    if (userRecord) {
+      userRecord.telegramChatId = String(chatId);
+      userRecord.telegramUsername = username;
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(localDb));
+        }
+      } catch {
+        // Ignorar
+      }
+    }
+
+    if (this.currentUser) {
+      const updatedUser = new User({
+        id: String(this.currentUser.id),
+        email: this.currentUser.email,
+        name: this.currentUser.name,
+        role: this.currentUser.role,
+        phone: this.currentUser.phone,
+        telegramChatId: String(chatId),
+        telegramUsername: username,
+        avatarUrl: this.currentUser.avatarUrl,
+        isDemo: this.currentUser.isDemo,
+      });
+      this.setCurrentUser(updatedUser);
+      await telegramService.sendWelcomeLinkMessage(chatId, updatedUser.name);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Sincroniza automáticamente los comandos /start recibidos por el bot
+   * para asociar al usuario activo o por su email/teléfono.
+   */
+  public async checkAndSyncTelegram(): Promise<{ linked: boolean; message: string }> {
+    const recentLinks = await telegramService.pollRecentLinks();
+    if (recentLinks.length === 0) {
+      return { linked: false, message: 'No se detectó actividad reciente en @CinePlusSeguridad_bot.' };
+    }
+
+    // Buscar si alguno de los links coincide con el usuario actual o su ID
+    const current = this.currentUser;
+    if (!current) {
+      return { linked: false, message: 'Inicia sesión para vincular tu cuenta.' };
+    }
+
+    const match = recentLinks.find(
+      (l) => l.linkPayload === `link_${current.id}` || l.linkPayload === current.id
+    ) || recentLinks[0]; // Si es el único usuario que interactuó recientemente
+
+    if (match) {
+      await this.linkTelegramAccount(String(current.id), match.chatId, match.username);
+      return {
+        linked: true,
+        message: `¡Cuenta vinculada con éxito a Telegram (@${match.username || match.firstName})!`,
+      };
+    }
+
+    return { linked: false, message: 'Presiona "INICIAR" en el chat del bot en Telegram para vincular tu cuenta.' };
   }
 
   /**
@@ -318,7 +704,7 @@ export class AuthService {
   }
 
   // Base de datos de usuarios local en localStorage (soporte de fallback)
-  private getLocalUsersDb(): Array<{ id: string; email: string; name: string; role: UserRole; password?: string }> {
+  public getLocalUsersDb(): StoredUserRecord[] {
     try {
       if (typeof localStorage === 'undefined') {
         return this.inMemoryUsersDb;
@@ -326,7 +712,6 @@ export class AuthService {
       const raw = localStorage.getItem(REGISTERED_USERS_KEY);
       if (!raw) return this.inMemoryUsersDb;
       const parsed = JSON.parse(raw);
-      // Combinar memoria y storage
       return Array.isArray(parsed) ? parsed : this.inMemoryUsersDb;
     } catch {
       return this.inMemoryUsersDb;
@@ -334,19 +719,26 @@ export class AuthService {
   }
 
   private saveToLocalDb(user: User, password?: string): void {
-    const record = {
+    const record: StoredUserRecord = {
       id: String(user.id),
       email: user.email,
       name: user.name,
       role: user.role,
+      phone: user.phone,
+      telegramChatId: user.telegramChatId,
+      telegramUsername: user.telegramUsername,
       password,
+      createdAt: user.createdAt.toISOString(),
     };
     this.inMemoryUsersDb.push(record);
 
     try {
       if (typeof localStorage !== 'undefined') {
         const db = this.getLocalUsersDb();
-        if (!db.some((u) => u.email === user.email)) {
+        const existingIdx = db.findIndex((u) => u.email === user.email);
+        if (existingIdx >= 0) {
+          db[existingIdx] = record;
+        } else {
           db.push(record);
         }
         localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(db));

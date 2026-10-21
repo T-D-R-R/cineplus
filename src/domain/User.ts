@@ -7,6 +7,9 @@ export interface UserParams {
   email: string;
   name: string;
   role?: UserRole;
+  phone?: string;
+  telegramChatId?: string;
+  telegramUsername?: string;
   avatarUrl?: string;
   isDemo?: boolean;
   createdAt?: Date | string | null;
@@ -20,6 +23,9 @@ export class User extends BaseEntity {
   public readonly email: string;
   public readonly name: string;
   public readonly role: UserRole;
+  public readonly phone?: string;
+  public readonly telegramChatId?: string;
+  public readonly telegramUsername?: string;
   public readonly avatarUrl?: string;
   public readonly isDemo: boolean;
 
@@ -28,6 +34,9 @@ export class User extends BaseEntity {
     this.email = params.email.trim().toLowerCase();
     this.name = params.name.trim();
     this.role = params.role || 'usuario';
+    this.phone = params.phone ? params.phone.trim() : undefined;
+    this.telegramChatId = params.telegramChatId ? String(params.telegramChatId).trim() : undefined;
+    this.telegramUsername = params.telegramUsername ? params.telegramUsername.trim().replace(/^@/, '') : undefined;
     this.avatarUrl = params.avatarUrl;
     this.isDemo = Boolean(params.isDemo);
   }
@@ -37,6 +46,13 @@ export class User extends BaseEntity {
    */
   public isAdmin(): boolean {
     return this.role === 'admin' || this.role === 'docente';
+  }
+
+  /**
+   * Determina si el usuario tiene vinculada su cuenta de Telegram para 2FA y OTP.
+   */
+  public hasTelegramLinked(): boolean {
+    return Boolean(this.telegramChatId && this.telegramChatId.length > 0);
   }
 
   /**
@@ -66,6 +82,9 @@ export class User extends BaseEntity {
       email: this.email,
       name: this.name,
       role: this.role,
+      phone: this.phone,
+      telegramChatId: this.telegramChatId,
+      telegramUsername: this.telegramUsername,
       avatarUrl: this.avatarUrl,
       isDemo: this.isDemo,
       createdAt: this.createdAt.toISOString(),
@@ -78,6 +97,9 @@ export class User extends BaseEntity {
       email: String(json.email || ''),
       name: String(json.name || ''),
       role: (json.role as UserRole) || 'usuario',
+      phone: json.phone ? String(json.phone) : undefined,
+      telegramChatId: json.telegramChatId ? String(json.telegramChatId) : undefined,
+      telegramUsername: json.telegramUsername ? String(json.telegramUsername) : undefined,
       avatarUrl: json.avatarUrl ? String(json.avatarUrl) : undefined,
       isDemo: Boolean(json.isDemo),
       createdAt: json.createdAt ? String(json.createdAt) : null,
