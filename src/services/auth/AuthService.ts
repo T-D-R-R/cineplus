@@ -14,25 +14,18 @@ export interface DemoAccountPreset {
 
 export const DEMO_PRESETS: DemoAccountPreset[] = [
   {
-    id: 'demo-docente-01',
+    id: 'demo-admin-01',
     name: 'Dr. Roberto Mendoza',
-    email: 'docente@undac.edu.pe',
-    role: 'docente',
-    description: 'Docente Evaluador - Acceso Completo Académico',
+    email: 'admin@cineplus.pe',
+    role: 'admin',
+    description: 'Administrador del Sistema - Control Total, ML & APIs',
   },
   {
-    id: 'demo-critico-02',
-    name: 'Lic. Andrea Paz',
-    email: 'critico@cineplus.pe',
-    role: 'critico',
-    description: 'Crítica Especialista - Experta en Cine y Festivales',
-  },
-  {
-    id: 'demo-estudiante-03',
+    id: 'demo-usuario-02',
     name: 'Carlos Alanya',
-    email: 'estudiante@undac.edu.pe',
+    email: 'usuario@cineplus.pe',
     role: 'usuario',
-    description: 'Cinéfilo Registrado - Usuario de Cartelera',
+    description: 'Usuario Cinéfilo - Cartelera y Reseñas',
   },
 ];
 
@@ -253,8 +246,9 @@ export class AuthService {
   /**
    * Inicio de sesión rápido en 1 Clic con preset de demostración.
    */
-  public async loginAsDemo(rolePreset: 'docente' | 'critico' | 'usuario'): Promise<User> {
-    const preset = DEMO_PRESETS.find((p) => p.role === rolePreset) || DEMO_PRESETS[0];
+  public async loginAsDemo(rolePreset: 'admin' | 'docente' | 'usuario'): Promise<User> {
+    const targetRole = rolePreset === 'docente' ? 'admin' : rolePreset;
+    const preset = DEMO_PRESETS.find((p) => p.role === targetRole) || DEMO_PRESETS[0];
     const user = new User({
       id: preset.id,
       email: preset.email,

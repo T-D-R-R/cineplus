@@ -1,6 +1,6 @@
 import { BaseEntity } from './BaseEntity';
 
-export type UserRole = 'docente' | 'critico' | 'usuario';
+export type UserRole = 'admin' | 'docente' | 'usuario' | 'critico';
 
 export interface UserParams {
   id: string;
@@ -33,6 +33,13 @@ export class User extends BaseEntity {
   }
 
   /**
+   * Determina si el usuario tiene privilegios de Administrador / Docente del sistema.
+   */
+  public isAdmin(): boolean {
+    return this.role === 'admin' || this.role === 'docente';
+  }
+
+  /**
    * Obtiene las iniciales del nombre (ej: "Juan Pérez" -> "JP")
    */
   public getInitials(): string {
@@ -47,14 +54,10 @@ export class User extends BaseEntity {
    * Etiqueta amigable según el rol del usuario
    */
   public getRoleLabel(): string {
-    switch (this.role) {
-      case 'docente':
-        return 'Docente Evaluador';
-      case 'critico':
-        return 'Crítico Especialista';
-      default:
-        return 'Cinéfilo Registrado';
+    if (this.isAdmin()) {
+      return 'Administrador del Sistema';
     }
+    return 'Usuario Cinéfilo';
   }
 
   public override toJson(): Record<string, unknown> {

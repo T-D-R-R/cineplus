@@ -18,6 +18,7 @@ import {
 import { mlBenchmarkService } from '../../services/ml/benchmark/MlBenchmarkService';
 import type { MovieMlAnalysisResult } from '../../services/ml/benchmark/types';
 import type { Review } from '../../domain/Review';
+import { useAuth } from '../../context/AuthContext';
 
 interface MovieMlDashboardProps {
   movieId: number | string;
@@ -62,6 +63,8 @@ const DEMO_PRESET_REVIEWS = {
 
 export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashboardProps) {
   const numericId = Number(movieId) || 0;
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin() || false;
 
   // Reseñas adicionales inyectadas temporalmente en memoria (para pruebas del docente)
   // IMPORTANTE: Se guardan ÚNICAMENTE en estado React (memoria RAM), NUNCA en Supabase
@@ -204,30 +207,38 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
           </p>
         </div>
 
-        {/* Botón Principal: Hacer Competir los 5 Algoritmos */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleRunCompetition}
-            disabled={isCompeting}
-            className={`px-5 py-3 rounded-2xl font-bold text-xs md:text-sm transition-all shadow-lg flex items-center gap-2 ${
-              isCompeting
-                ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-wait'
-                : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20 hover:scale-105 active:scale-95'
-            }`}
-          >
-            {isCompeting ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
-                <span>Haciendo Competir Modelos...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4" />
-                <span>Hacer Competir los 5 Algoritmos</span>
-              </>
-            )}
-          </button>
-        </div>
+        {/* Botón Principal: Hacer Competir los 5 Algoritmos (Solo Administrador) */}
+        {isAdmin ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleRunCompetition}
+              disabled={isCompeting}
+              className={`px-5 py-3 rounded-2xl font-bold text-xs md:text-sm transition-all shadow-lg flex items-center gap-2 ${
+                isCompeting
+                  ? 'bg-slate-800 text-slate-400 border border-slate-700 cursor-wait'
+                  : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/20 hover:scale-105 active:scale-95'
+              }`}
+            >
+              {isCompeting ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin text-amber-400" />
+                  <span>Haciendo Competir Modelos...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4" />
+                  <span>Hacer Competir los 5 Algoritmos</span>
+                </>
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-400 font-medium">
+              Inferencia AutoML en Vivo
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Banner de progreso de la competencia si está activa */}
@@ -401,221 +412,246 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
           </div>
         </div>
 
-        {/* Card 3: Carga de Reseñas y Simulador Docente */}
-        <div className="glass-panel p-5 rounded-2xl border border-slate-800/80 bg-slate-950/40 space-y-3 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <BarChart3 className="w-4 h-4 text-cyan-400" /> Volumen de Críticas
-              </span>
-              <span className="text-xs font-mono font-bold text-amber-400">
-                {totalReviews} analizadas
-              </span>
-            </div>
-
-            <div className="mt-2 text-xs text-slate-400 space-y-1">
-              <div className="flex justify-between">
-                <span>Críticas reales (Comunidad):</span>
-                <span className="font-bold text-white">{reviews.length}</span>
+        {/* Card 3: Carga de Reseñas (Diferenciado por Rol) */}
+        {isAdmin ? (
+          <div className="glass-panel p-5 rounded-2xl border border-slate-800/80 bg-slate-950/40 space-y-3 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-cyan-400" /> Volumen de Críticas
+                </span>
+                <span className="text-xs font-mono font-bold text-amber-400">
+                  {totalReviews} analizadas
+                </span>
               </div>
-              {injectedReviews.length > 0 && (
-                <div className="flex justify-between text-purple-300">
-                  <span>Pruebas simuladas (Memoria):</span>
-                  <span className="font-bold">+{injectedReviews.length}</span>
+
+              <div className="mt-2 text-xs text-slate-400 space-y-1">
+                <div className="flex justify-between">
+                  <span>Críticas reales (Comunidad):</span>
+                  <span className="font-bold text-white">{reviews.length}</span>
                 </div>
-              )}
-            </div>
-
-            <p className="text-[11px] text-slate-500 mt-2 italic">
-              *Las pruebas con los botones viven en memoria RAM local; NO se guardan en la base de datos de usuarios.
-            </p>
-          </div>
-
-          {/* Botones de Inyección Rápida para Evaluación */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
-              <button
-                onClick={() => handleInjectReviews('positive')}
-                className="px-2 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-colors text-center"
-                title="Inyecta 5 críticas sumamente positivas en memoria"
-              >
-                +5 Positivas
-              </button>
-              <button
-                onClick={() => handleInjectReviews('varied')}
-                className="px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors text-center"
-                title="Inyecta 6 críticas mixtas en memoria para retar a SVM y k-NN"
-              >
-                +6 Variadas
-              </button>
-              <button
-                onClick={() => handleInjectReviews('negative')}
-                className="px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-colors text-center"
-                title="Inyecta 5 críticas negativas en memoria"
-              >
-                +5 Negativas
-              </button>
-            </div>
-
-            {injectedReviews.length > 0 && (
-              <button
-                onClick={handleResetReviews}
-                className="w-full text-[11px] text-purple-300 hover:text-white flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-colors font-semibold"
-              >
-                <RefreshCw className="w-3 h-3" /> Limpiar {injectedReviews.length} pruebas (Volver a {reviews.length} reales)
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Sección Desplegable: Justificación Científica y Tabla Comparativa de los 5 Modelos */}
-      <div className="border-t border-slate-800/80 pt-4">
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-xs md:text-sm font-bold text-slate-200 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Info className="w-4 h-4 text-amber-400" />
-            <span>Ver Justificación Científica & Tabla de los 5 Algoritmos Competidores</span>
-          </div>
-          {showDetails ? (
-            <ChevronUp className="w-4 h-4 text-slate-400" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-slate-400" />
-          )}
-        </button>
-
-        {showDetails && (
-          <div className="mt-4 space-y-5 animate-in fade-in duration-300">
-            {/* Justificación Científica */}
-            <div className="p-4 rounded-2xl bg-amber-500/[0.06] border border-amber-500/20 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
-                <Trophy className="w-4 h-4" /> Justificación de la Victoria del Algoritmo
+                {injectedReviews.length > 0 && (
+                  <div className="flex justify-between text-purple-300">
+                    <span>Pruebas simuladas (Memoria):</span>
+                    <span className="font-bold">+{injectedReviews.length}</span>
+                  </div>
+                )}
               </div>
-              <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-                {analysis.scientificExplanation}
+
+              <p className="text-[11px] text-slate-500 mt-2 italic">
+                *Las pruebas con los botones viven en memoria RAM local; NO se guardan en la base de datos de usuarios.
               </p>
             </div>
 
-            {/* Tabla Comparativa de los 5 Algoritmos */}
-            <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 bg-slate-900/80">
-                    <th className="py-3 px-4">Algoritmo</th>
-                    <th className="py-3 px-3">Familia</th>
-                    <th className="py-3 px-3 text-right">Accuracy</th>
-                    <th className="py-3 px-3 text-right">Precision</th>
-                    <th className="py-3 px-3 text-right">Recall</th>
-                    <th className="py-3 px-3 text-right">F1-Score</th>
-                    <th className="py-3 px-3 text-right">Latencia</th>
-                    <th className="py-3 px-4 text-center">Estado</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                  {allModels.map((m) => {
-                    const isWin = m.isWinner;
-                    return (
-                      <tr
-                        key={m.modelId}
-                        className={`transition-colors ${
-                          isWin ? 'bg-amber-500/10 font-semibold' : 'hover:bg-slate-900/40'
-                        }`}
-                      >
-                        <td className="py-3 px-4 flex items-center gap-2 font-medium text-white">
-                          {isWin && <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
-                          <span>{m.modelName}</span>
-                        </td>
-                        <td className="py-3 px-3 text-slate-400">{m.algorithmFamily}</td>
-                        <td className="py-3 px-3 text-right font-mono text-emerald-400">
-                          {m.accuracy}%
-                        </td>
-                        <td className="py-3 px-3 text-right font-mono">{m.precision}%</td>
-                        <td className="py-3 px-3 text-right font-mono">{m.recall}%</td>
-                        <td className="py-3 px-3 text-right font-mono text-amber-400 font-bold">
-                          {m.f1Score}%
-                        </td>
-                        <td className="py-3 px-3 text-right font-mono text-cyan-400">
-                          {m.avgInferenceTimeMs} ms
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          {isWin ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                              🏆 Campeón
-                            </span>
-                          ) : (
-                            <span className="text-slate-500 text-[11px]">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Muestra de Predicciones del Modelo Campeón en las Críticas */}
-            {predictions.length > 0 && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                    <Zap className="w-3.5 h-3.5 text-amber-400" />
-                    Muestras de Inferencia Recientes ({predictions.slice(0, 4).length} de {predictions.length})
-                  </span>
-                  <span className="text-[11px] text-slate-500">
-                    Clasificado por: <span className="text-amber-400 font-mono">{championModel.modelName}</span>
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {predictions.slice(0, 4).map((p, i) => {
-                    const isPos = p.predictedSentiment === 'positivo';
-                    const isNeg = p.predictedSentiment === 'negativo';
-                    return (
-                      <div
-                        key={p.id || i}
-                        className="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2 text-xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 truncate max-w-[170px]">
-                            <span className="font-semibold text-slate-300 truncate">
-                              {p.userName}
-                            </span>
-                            {p.isSimulated ? (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
-                                Simulación
-                              </span>
-                            ) : (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
-                                Real
-                              </span>
-                            )}
-                          </div>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                              isPos
-                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                                : isNeg
-                                ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                            }`}
-                          >
-                            {p.predictedSentiment} ({p.confidence}%)
-                          </span>
-                        </div>
-                        <p className="text-slate-400 line-clamp-2 italic">
-                          &ldquo;{p.comment}&rdquo;
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Botones de Inyección Rápida para Evaluación */}
+            <div className="space-y-2">
+              <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
+                <button
+                  onClick={() => handleInjectReviews('positive')}
+                  className="px-2 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-colors text-center"
+                  title="Inyecta 5 críticas sumamente positivas en memoria"
+                >
+                  +5 Positivas
+                </button>
+                <button
+                  onClick={() => handleInjectReviews('varied')}
+                  className="px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors text-center"
+                  title="Inyecta 6 críticas mixtas en memoria para retar a SVM y k-NN"
+                >
+                  +6 Variadas
+                </button>
+                <button
+                  onClick={() => handleInjectReviews('negative')}
+                  className="px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-colors text-center"
+                  title="Inyecta 5 críticas negativas en memoria"
+                >
+                  +5 Negativas
+                </button>
               </div>
-            )}
+
+              {injectedReviews.length > 0 && (
+                <button
+                  onClick={handleResetReviews}
+                  className="w-full text-[11px] text-purple-300 hover:text-white flex items-center justify-center gap-1.5 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-colors font-semibold"
+                >
+                  <RefreshCw className="w-3 h-3" /> Limpiar {injectedReviews.length} pruebas (Volver a {reviews.length} reales)
+                </button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="glass-panel p-5 rounded-2xl border border-slate-800/80 bg-slate-950/40 space-y-3 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-cyan-400" /> Reseñas Analizadas
+                </span>
+                <span className="text-xs font-mono font-bold text-amber-400">
+                  {totalReviews} opiniones
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                Cada crítica de la comunidad es procesada en tiempo real mediante Inteligencia Artificial y Machine Learning para estimar la recomendación global.
+              </p>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400">
+              💡 <span className="text-slate-300 font-semibold">¿Eres Administrador o Docente?</span> Inicia sesión con cuenta de Administrador para calibrar modelos o simular volumen de opiniones.
+            </div>
           </div>
         )}
       </div>
+
+      {/* 4. Sección Desplegable: Justificación Científica y Tabla Comparativa de los 5 Modelos (Exclusivo Administrador) */}
+      {isAdmin && (
+        <div className="border-t border-slate-800/80 pt-4">
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-900/60 hover:bg-slate-900 border border-slate-800 text-xs md:text-sm font-bold text-slate-200 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-amber-400" />
+              <span>Panel de Auditoría Docente: Justificación Científica & Tabla de 5 Algoritmos</span>
+            </div>
+            {showDetails ? (
+              <ChevronUp className="w-4 h-4 text-slate-400" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            )}
+          </button>
+
+          {showDetails && (
+            <div className="mt-4 space-y-5 animate-in fade-in duration-300">
+              {/* Justificación Científica */}
+              <div className="p-4 rounded-2xl bg-amber-500/[0.06] border border-amber-500/20 space-y-2">
+                <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
+                  <Trophy className="w-4 h-4" /> Justificación de la Victoria del Algoritmo
+                </div>
+                <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+                  {analysis.scientificExplanation}
+                </p>
+              </div>
+
+              {/* Tabla Comparativa de los 5 Algoritmos */}
+              <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/60">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-800 text-[11px] uppercase tracking-wider text-slate-400 bg-slate-900/80">
+                      <th className="py-3 px-4">Algoritmo</th>
+                      <th className="py-3 px-3">Familia</th>
+                      <th className="py-3 px-3 text-right">Accuracy</th>
+                      <th className="py-3 px-3 text-right">Precision</th>
+                      <th className="py-3 px-3 text-right">Recall</th>
+                      <th className="py-3 px-3 text-right">F1-Score</th>
+                      <th className="py-3 px-3 text-right">Latencia</th>
+                      <th className="py-3 px-4 text-center">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                    {allModels.map((m) => {
+                      const isWin = m.isWinner;
+                      return (
+                        <tr
+                          key={m.modelId}
+                          className={`transition-colors ${
+                            isWin ? 'bg-amber-500/10 font-semibold' : 'hover:bg-slate-900/40'
+                          }`}
+                        >
+                          <td className="py-3 px-4 flex items-center gap-2 font-medium text-white">
+                            {isWin && <Trophy className="w-3.5 h-3.5 text-amber-400 shrink-0" />}
+                            <span>{m.modelName}</span>
+                          </td>
+                          <td className="py-3 px-3 text-slate-400">{m.algorithmFamily}</td>
+                          <td className="py-3 px-3 text-right font-mono text-emerald-400">
+                            {m.accuracy}%
+                          </td>
+                          <td className="py-3 px-3 text-right font-mono">{m.precision}%</td>
+                          <td className="py-3 px-3 text-right font-mono">{m.recall}%</td>
+                          <td className="py-3 px-3 text-right font-mono text-amber-400 font-bold">
+                            {m.f1Score}%
+                          </td>
+                          <td className="py-3 px-3 text-right font-mono text-cyan-400">
+                            {m.avgInferenceTimeMs} ms
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {isWin ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                🏆 Campeón
+                              </span>
+                            ) : (
+                              <span className="text-slate-500 text-[11px]">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 5. Muestras de Inferencia Recientes en las Críticas (Visible para todos) */}
+      {predictions.length > 0 && (
+        <div className="border-t border-slate-800/80 pt-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              Muestras de Críticas Calificadas por IA ({predictions.slice(0, 4).length} de {predictions.length})
+            </span>
+            <span className="text-[11px] text-slate-500">
+              Modelo en funciones: <span className="text-amber-400 font-mono">{championModel.modelName}</span>
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {predictions.slice(0, 4).map((p, i) => {
+              const isPos = p.predictedSentiment === 'positivo';
+              const isNeg = p.predictedSentiment === 'negativo';
+              return (
+                <div
+                  key={p.id || i}
+                  className="p-3.5 rounded-2xl bg-slate-900/70 border border-slate-800 space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 truncate max-w-[170px]">
+                      <span className="font-semibold text-slate-300 truncate">
+                        {p.userName}
+                      </span>
+                      {isAdmin && (
+                        p.isSimulated ? (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30 shrink-0">
+                            Simulación
+                          </span>
+                        ) : (
+                          <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 shrink-0">
+                            Real
+                          </span>
+                        )
+                      )}
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                        isPos
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                          : isNeg
+                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                      }`}
+                    >
+                      {p.predictedSentiment} ({p.confidence}%)
+                    </span>
+                  </div>
+                  <p className="text-slate-400 line-clamp-2 italic">
+                    &ldquo;{p.comment}&rdquo;
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </section>
   );
 }

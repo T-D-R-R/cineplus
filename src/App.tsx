@@ -6,7 +6,6 @@ import { HomePage } from './pages/HomePage';
 import { MovieDetailPage } from './pages/MovieDetailPage';
 import { TopRatedPage } from './pages/TopRatedPage';
 import { UpcomingPage } from './pages/UpcomingPage';
-import { MlDashboardPage } from './pages/MlDashboardPage';
 import { CinePlusChatbot } from './components/ai/CinePlusChatbot';
 import { AuthProvider } from './context/AuthContext';
 import { AuthModal } from './components/auth/AuthModal';
@@ -29,7 +28,6 @@ export default function App() {
               <Route path="/pelicula/:id" element={<MovieDetailPage />} />
               <Route path="/top-rated" element={<TopRatedPage />} />
               <Route path="/estrenos" element={<UpcomingPage />} />
-              <Route path="/ml-dashboard" element={<MlDashboardPage />} />
               {/* Redirección por defecto si la ruta no existe */}
               <Route path="*" element={<HomePage />} />
             </Routes>

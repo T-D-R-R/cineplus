@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Clapperboard, Flame, Trophy, Calendar, Settings, Sparkles, Menu, X, Bot, Activity } from 'lucide-react';
+import { Clapperboard, Flame, Trophy, Calendar, Settings, Sparkles, Menu, X, Bot } from 'lucide-react';
 import { ConfigModal } from './ConfigModal';
 import { UserMenu } from '../auth/UserMenu';
 import { isTmdbConfigured, isSupabaseConfigured, isGeminiConfigured } from '../../core/config';
+import { useAuth } from '../../context/AuthContext';
 
 export function Navbar() {
   const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.isAdmin() || false;
+
   const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -14,7 +18,6 @@ export function Navbar() {
     { to: '/', label: 'Cartelera', icon: Flame },
     { to: '/top-rated', label: 'Top 10', icon: Trophy },
     { to: '/estrenos', label: 'Próximos Estrenos', icon: Calendar },
-    { to: '/ml-dashboard', label: 'ML Dashboard', icon: Activity },
   ];
 
   const tmdbOk = isTmdbConfigured();
@@ -102,15 +105,17 @@ export function Navbar() {
             {/* Menú de Usuario / Login */}
             <UserMenu />
 
-            {/* Botón de Configuración */}
-            <button
-              onClick={() => setIsConfigOpen(true)}
-              className="p-2 sm:p-2.5 rounded-xl glass-panel text-slate-300 hover:text-amber-400 hover:border-amber-500/40 transition-all cursor-pointer"
-              title="Ajustes de Credenciales y APIs"
-              aria-label="Abrir configuración"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+            {/* Botón de Configuración: Exclusivo para Administrador */}
+            {isAdmin && (
+              <button
+                onClick={() => setIsConfigOpen(true)}
+                className="p-2 sm:p-2.5 rounded-xl glass-panel text-amber-400 hover:text-amber-300 border-amber-500/30 hover:border-amber-500 transition-all cursor-pointer relative"
+                title="Ajustes de Credenciales y APIs (Administrador)"
+                aria-label="Abrir configuración"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
 
             {/* Toggle Menú Móvil */}
             <button
@@ -148,12 +153,14 @@ export function Navbar() {
         )}
       </header>
 
-      {/* Modal de Configuración */}
-      <ConfigModal
-        isOpen={isConfigOpen}
-        onClose={() => setIsConfigOpen(false)}
-        onConfigChanged={() => window.location.reload()}
-      />
+      {/* Modal de Configuración: Solo accesible para Administrador */}
+      {isAdmin && (
+        <ConfigModal
+          isOpen={isConfigOpen}
+          onClose={() => setIsConfigOpen(false)}
+          onConfigChanged={() => window.location.reload()}
+        />
+      )}
     </>
   );
 }

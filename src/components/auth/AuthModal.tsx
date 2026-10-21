@@ -6,7 +6,6 @@ import {
   Mail,
   Lock,
   User as UserIcon,
-  GraduationCap,
   Sparkles,
   ShieldCheck,
   Film,
@@ -69,7 +68,7 @@ export function AuthModal() {
     }
   };
 
-  const handleQuickDemo = async (presetRole: 'docente' | 'critico' | 'usuario') => {
+  const handleQuickDemo = async (presetRole: 'admin' | 'usuario') => {
     setErrorMsg(null);
     setSubmitting(true);
     try {
@@ -109,33 +108,35 @@ export function AuthModal() {
             Cine<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-rose-400">Plus</span> ID
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Inicia sesión o regístrate para publicar reseñas con tu perfil y alimentar el sistema de Machine Learning.
+            Inicia sesión o regístrate para publicar reseñas y probar los distintos roles del sistema.
           </p>
         </div>
 
-        {/* Acceso Rápido para Evaluación Docente (1-Clic) */}
+        {/* Acceso Rápido para Demostración (1-Clic) */}
         <div className="mb-6 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/20">
           <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
-            <Sparkles className="w-3.5 h-3.5" /> Acceso Rápido para Demostración (1 Clic)
+            <Sparkles className="w-3.5 h-3.5" /> Acceso Rápido por Rol (1 Clic)
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              onClick={() => handleQuickDemo('docente')}
+              onClick={() => handleQuickDemo('admin')}
               disabled={submitting}
-              className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-amber-500/20 border border-amber-500/30 text-slate-200 hover:text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer text-left"
+              className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-amber-500/20 border border-amber-500/30 text-slate-200 hover:text-amber-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer text-left"
+              title="Acceso total a calibración ML, modelos AutoML y configuración de APIs"
             >
-              <GraduationCap className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Docente UNDAC</span>
+              <ShieldCheck className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Administrador</span>
             </button>
             <button
               type="button"
-              onClick={() => handleQuickDemo('critico')}
+              onClick={() => handleQuickDemo('usuario')}
               disabled={submitting}
-              className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-rose-500/20 border border-rose-500/30 text-slate-200 hover:text-rose-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer text-left"
+              className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-indigo-500/20 border border-indigo-500/30 text-slate-200 hover:text-indigo-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer text-left"
+              title="Acceso a Cartelera, Comité de Agentes y publicación de reseñas"
             >
-              <ShieldCheck className="w-4 h-4 text-rose-400 shrink-0" />
-              <span>Crítico de Cine</span>
+              <UserIcon className="w-4 h-4 text-indigo-400 shrink-0" />
+              <span>Cinéfilo</span>
             </button>
           </div>
         </div>
@@ -253,9 +254,8 @@ export function AuthModal() {
                 disabled={submitting}
                 className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-sm focus:outline-none focus:border-amber-500"
               >
-                <option value="usuario">Cinéfilo Registrado</option>
-                <option value="docente">Docente Evaluador (Académico)</option>
-                <option value="critico">Crítico Cinematográfico Especialista</option>
+                <option value="usuario">Usuario Cinéfilo (Público general)</option>
+                <option value="admin">Administrador del Sistema (Docente / Control Total)</option>
               </select>
             </div>
           )}

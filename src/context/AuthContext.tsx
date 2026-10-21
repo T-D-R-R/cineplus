@@ -12,7 +12,7 @@ interface AuthContextType {
   closeAuthModal: () => void;
   loginWithEmail: (email: string, password: string) => Promise<User>;
   registerWithEmail: (name: string, email: string, password: string, role?: UserRole) => Promise<User>;
-  loginAsDemo: (rolePreset: 'docente' | 'critico' | 'usuario') => Promise<User>;
+  loginAsDemo: (rolePreset: 'admin' | 'docente' | 'usuario') => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return registered;
   };
 
-  const loginAsDemo = async (rolePreset: 'docente' | 'critico' | 'usuario'): Promise<User> => {
+  const loginAsDemo = async (rolePreset: 'admin' | 'docente' | 'usuario'): Promise<User> => {
     const demoUser = await authService.loginAsDemo(rolePreset);
     setUser(demoUser);
     closeAuthModal();

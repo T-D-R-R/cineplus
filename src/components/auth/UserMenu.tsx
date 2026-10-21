@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { LogIn, LogOut, GraduationCap, ShieldCheck, ChevronDown, Sparkles } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, ChevronDown, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 export function UserMenu() {
@@ -33,25 +33,17 @@ export function UserMenu() {
   }
 
   const getRoleIcon = () => {
-    switch (user.role) {
-      case 'docente':
-        return <GraduationCap className="w-3.5 h-3.5 text-amber-400" />;
-      case 'critico':
-        return <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />;
-      default:
-        return <Sparkles className="w-3.5 h-3.5 text-indigo-400" />;
+    if (user.isAdmin()) {
+      return <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />;
     }
+    return <Sparkles className="w-3.5 h-3.5 text-indigo-400" />;
   };
 
   const getAvatarGradient = () => {
-    switch (user.role) {
-      case 'docente':
-        return 'from-amber-500 to-yellow-600 text-slate-950';
-      case 'critico':
-        return 'from-rose-500 to-pink-600 text-white';
-      default:
-        return 'from-indigo-500 to-purple-600 text-white';
+    if (user.isAdmin()) {
+      return 'from-amber-500 to-yellow-600 text-slate-950 font-black';
     }
+    return 'from-indigo-500 to-purple-600 text-white font-bold';
   };
 
   return (
@@ -63,14 +55,21 @@ export function UserMenu() {
       >
         {/* Avatar Circular con Iniciales */}
         <div
-          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr ${getAvatarGradient()} flex items-center justify-center font-black text-xs shadow-md shrink-0`}
+          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr ${getAvatarGradient()} flex items-center justify-center text-xs shadow-md shrink-0`}
         >
           {user.getInitials()}
         </div>
 
         {/* Nombre y Rol (Desktop) */}
         <div className="hidden md:flex flex-col">
-          <span className="text-xs font-bold text-white truncate max-w-[120px]">{user.name}</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-bold text-white truncate max-w-[120px]">{user.name}</span>
+            {user.isAdmin() && (
+              <span className="px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] font-black uppercase tracking-wider">
+                Admin
+              </span>
+            )}
+          </div>
           <span className="text-[10px] text-slate-400 flex items-center gap-1">
             {getRoleIcon()}
             {user.getRoleLabel()}
