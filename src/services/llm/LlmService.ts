@@ -373,16 +373,55 @@ export class LlmService {
       return '¡Por supuesto! Para hoy en CinePlus te recomiendo dos grandes alternativas de la cartelera: si buscas suspenso psicológico e impacto visual, "La Sustancia" es el estreno más aclamado y comentado del momento; y si prefieres una épica de ciencia ficción, "Dune: Parte Dos" en sala XD de Cineplanet te brindará una inmersión audiovisual espectacular. ¿Qué género prefieres hoy?';
     }
 
-    // 1. Prioridad: Moderador / Juez
-    if (spLower.includes('moderador') || spLower.includes('veredicto') || spLower.includes('conciliador')) {
+    // 1. Prioridad: Orquestador / Moderador General
+    if (
+      spLower.includes('orquestador') ||
+      spLower.includes('orquestadora') ||
+      spLower.includes('moderador') ||
+      spLower.includes('veredicto') ||
+      spLower.includes('conciliador')
+    ) {
       return (
-        'Tras contrastar la evaluación cinematográfica y la viabilidad económica en salas peruanas, ' +
-        'el comité concluye que esta obra reúne méritos suficientes para ser disfrutada en pantalla grande. ' +
-        'Recomendamos adquirir boletos en horario nocturno para una inmersión completa.'
+        'Tras contrastar los informes narrativo, logístico y técnico, y con la certificación unánime del dictamen de auditoría, ' +
+        'este comité resuelve que la obra amerita plenamente la compra del boleto. Recomendamos adquirir entradas en horario nocturno ' +
+        'y en sala de gran formato (XD o IMAX) para maximizar la fidelidad visual y sonora.'
       );
     }
 
-    // 2. Prioridad: Asesor Comercial / Logístico
+    // 2. Prioridad: Auditora de Calidad & Fact-Checking
+    if (
+      spLower.includes('auditor') ||
+      spLower.includes('auditora') ||
+      spLower.includes('fact-checking') ||
+      spLower.includes('sesgos') ||
+      spLower.includes('consistencia')
+    ) {
+      return (
+        'Tras auditar las opiniones de los especialistas contra los datos duros de TMDb y los tarifarios reales de cines en Perú, ' +
+        'el debate supera la verificación de consistencia lógica sin alucinaciones ni contradicciones identificadas. ' +
+        'Certificamos la viabilidad y objetividad de las conclusiones con un 90% de confiabilidad técnica.'
+      );
+    }
+
+    // 3. Prioridad: Consultor Técnico & Audiovisual
+    if (
+      spLower.includes('técnico') ||
+      spLower.includes('tecnico') ||
+      spLower.includes('audiovisual') ||
+      spLower.includes('fotografía') ||
+      spLower.includes('fotografia') ||
+      spLower.includes('sonido') ||
+      spLower.includes('vfx') ||
+      spLower.includes('cgi')
+    ) {
+      return (
+        'A nivel técnico y sensorial, la cinematografía despliega un manejo lumínico de altísima precisión acompañado ' +
+        'por un diseño sonoro multicanal calibrado para salas con Dolby Atmos. La integración de los efectos visuales (VFX) ' +
+        'mantiene el verismo orgánico en cada encuadre, justificando plenamente su visionado en pantallas de gran escala.'
+      );
+    }
+
+    // 4. Prioridad: Asesor Comercial / Logístico
     if (
       spLower.includes('financiero') ||
       spLower.includes('logístico') ||
@@ -396,7 +435,7 @@ export class LlmService {
       );
     }
 
-    // 3. Prioridad: Crítico de Arte
+    // 5. Prioridad: Crítico de Arte y Narrativa
     if (spLower.includes('crítico') || spLower.includes('critico') || spLower.includes('narrativa')) {
       return (
         'Desde el ángulo puramente cinematográfico, la obra demuestra un notable virtuosismo en la escala visual, ' +

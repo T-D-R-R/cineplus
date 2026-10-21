@@ -1,8 +1,19 @@
 import { useState } from 'react';
-import { Bot, Sparkles, Brain, Scale, Ticket, MessageSquareCheck, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Bot,
+  Sparkles,
+  Brain,
+  Scale,
+  Ticket,
+  MessageSquareCheck,
+  RefreshCw,
+  ChevronDown,
+  ChevronUp,
+  ShieldCheck,
+} from 'lucide-react';
 import { Movie } from '../../domain/Movie';
 import { AgentCoordinator } from '../../services/agents/AgentCoordinator';
-import type { MultiAgentDeliberation } from '../../services/agents/types';
+import type { MultiAgentDeliberation, AgentRole } from '../../services/agents/types';
 
 interface MultiAgentPanelProps {
   movie: Movie;
@@ -30,19 +41,36 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
     }
   };
 
+  const getRoleBadgeLabel = (role: AgentRole) => {
+    switch (role) {
+      case 'CRITIC':
+        return 'Especialista 1: Crítica Narrativa';
+      case 'LOGISTICS':
+        return 'Especialista 2: Cartelera y Finanzas';
+      case 'TECHNICAL':
+        return 'Especialista 3: Dirección Técnica & VFX';
+      case 'AUDITOR':
+        return 'Auditora: Fact-Checking & Calidad';
+      case 'ORCHESTRATOR':
+        return 'Orquestadora: Resolución Vinculante';
+      default:
+        return 'Agente Especialista';
+    }
+  };
+
   return (
     <section className="glass-panel rounded-3xl border border-indigo-500/30 overflow-hidden shadow-2xl shadow-indigo-950/20 bg-gradient-to-b from-slate-900/90 to-slate-950/90">
       {/* Cabecera del Panel */}
       <div className="p-6 sm:p-8 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-900/40">
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-bold tracking-wide">
-            <Bot className="w-3.5 h-3.5" /> SISTEMA MULTI-AGENTE & MACHINE LEARNING
+            <Bot className="w-3.5 h-3.5" /> ARQUITECTURA DE 5 AGENTES & MACHINE LEARNING
           </div>
           <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
-            Comité Asesor CinePlus AI
+            Comité Asesor CinePlus AI (5 Agentes)
           </h2>
-          <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-            Tres agentes autónomos deliberan en tiempo real sobre guion, costos en salas peruanas y viabilidad comercial, respaldados por un modelo supervisado de <span className="text-indigo-400 font-semibold">Naive Bayes</span> y afinidad <span className="text-indigo-400 font-semibold">k-NN</span>.
+          <p className="text-slate-300 text-xs sm:text-sm max-w-3xl leading-relaxed">
+            Deliberación en tiempo real coordinada por <span className="text-amber-400 font-semibold">1 Orquestador</span>, <span className="text-indigo-400 font-semibold">3 Especialistas de Trabajo</span> (Narrativa, Cartelera y Técnica) y <span className="text-emerald-400 font-semibold">1 Auditora de Calidad</span> contra datos de TMDb y Machine Learning.
           </p>
         </div>
 
@@ -59,12 +87,12 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
             {loading ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin text-indigo-400" />
-                <span>Deliberando...</span>
+                <span>Deliberando (5 Agentes)...</span>
               </>
             ) : deliberation ? (
               <>
                 <RefreshCw className="w-4 h-4" />
-                <span>Volver a Consultar</span>
+                <span>Volver a Deliberar</span>
               </>
             ) : (
               <>
@@ -77,7 +105,7 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
           {deliberation && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="p-3 rounded-2xl glass-panel text-slate-400 hover:text-white transition-colors"
+              className="p-3 rounded-2xl glass-panel text-slate-400 hover:text-white transition-colors cursor-pointer"
               title={expanded ? 'Colapsar panel' : 'Expandir panel'}
             >
               {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -92,10 +120,10 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
           <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center mx-auto animate-pulse">
             <Brain className="w-8 h-8 animate-bounce" />
           </div>
-          <h3 className="text-lg font-bold text-white">Deliberando en el Comité...</h3>
+          <h3 className="text-lg font-bold text-white">Deliberando en el Comité de 5 Agentes...</h3>
           <p className="text-indigo-400 text-sm font-medium animate-pulse">{stepMessage}</p>
-          <div className="w-48 h-1.5 bg-slate-800 rounded-full mx-auto overflow-hidden">
-            <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full animate-progress" />
+          <div className="w-64 h-1.5 bg-slate-800 rounded-full mx-auto overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-amber-500 rounded-full animate-progress" />
           </div>
         </div>
       )}
@@ -107,8 +135,8 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
             <Bot className="w-7 h-7" />
           </div>
           <h3 className="text-base sm:text-lg font-bold text-white">¿Te conviene ver esta película en cartelera hoy?</h3>
-          <p className="text-slate-400 text-xs sm:text-sm max-w-md mx-auto">
-            Haz clic en <strong className="text-indigo-400">"Iniciar Deliberación de IA"</strong> para que el comité de agentes debata los precios en soles, salas de Perú y el sentimiento colectivo.
+          <p className="text-slate-400 text-xs sm:text-sm max-w-lg mx-auto">
+            Haz clic en <strong className="text-indigo-400">"Iniciar Deliberación de IA"</strong> para que el comité de 5 agentes debata los precios en soles, salas de Perú, diseño audiovisual y el dictamen de auditoría en vivo.
           </p>
         </div>
       )}
@@ -116,8 +144,8 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
       {/* Resultados de la Deliberación */}
       {!loading && deliberation && expanded && (
         <div className="p-6 sm:p-8 space-y-8 animate-in fade-in duration-300">
-          {/* Fila 1: Métricas de Machine Learning (k-NN + Naive Bayes) */}
-          <div className="grid md:grid-cols-2 gap-4">
+          {/* Fila 1: Triada de Métricas (k-NN + Naive Bayes + Auditoría) */}
+          <div className="grid md:grid-cols-3 gap-4">
             {/* Tarjeta ML: Afinidad de Usuario (k-NN) */}
             <div className="glass-panel rounded-2xl p-5 border border-indigo-500/20 bg-indigo-950/15 space-y-3">
               <div className="flex items-center justify-between">
@@ -141,7 +169,7 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
             <div className="glass-panel rounded-2xl p-5 border border-emerald-500/20 bg-emerald-950/15 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                  <MessageSquareCheck className="w-4 h-4" /> Sentimiento Audiencia (Naive Bayes)
+                  <MessageSquareCheck className="w-4 h-4" /> Sentimiento Audiencia (NB)
                 </span>
                 <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
                   {deliberation.sentimentStats.dominantSentiment}
@@ -170,24 +198,45 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
               <div className="flex items-center justify-between text-xs text-slate-400">
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Positivo: {deliberation.sentimentStats.positiveRatio}%
+                  {deliberation.sentimentStats.positiveRatio}%
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  Neutral: {deliberation.sentimentStats.neutralRatio}%
+                  {deliberation.sentimentStats.neutralRatio}%
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-rose-500" />
-                  Negativo: {deliberation.sentimentStats.negativeRatio}%
+                  {deliberation.sentimentStats.negativeRatio}%
                 </span>
               </div>
             </div>
+
+            {/* Tarjeta Auditoría & Fact-Checking (Agente 5) */}
+            <div className="glass-panel rounded-2xl p-5 border border-amber-500/20 bg-amber-950/15 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" /> Fact-Checking & Auditoría
+                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                  {deliberation.auditMetrics.consistencyScore}% Confiabilidad
+                </span>
+              </div>
+              <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${deliberation.auditMetrics.consistencyScore}%` }}
+                />
+              </div>
+              <p className="text-xs text-slate-300">
+                {deliberation.auditMetrics.factualNotes}
+              </p>
+            </div>
           </div>
 
-          {/* Fila 2: Intercambio de Diálogo de los 3 Agentes */}
+          {/* Fila 2: Intercambio y Deliberación de los 5 Agentes */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-              <Bot className="w-4 h-4 text-indigo-400" /> Deliberación del Panel de Agentes
+              <Bot className="w-4 h-4 text-indigo-400" /> Deliberación Secuencial del Comité (5 Agentes)
             </h3>
 
             <div className="grid gap-4">
@@ -208,7 +257,7 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
                     </div>
 
                     <span className={`text-xs font-bold px-3 py-1 rounded-full border ${msg.badgeColor}`}>
-                      {msg.role === 'CRITIC' ? 'Crítica de Arte' : msg.role === 'LOGISTICS' ? 'Cartelera y Finanzas' : 'Juez Conciliador'}
+                      {getRoleBadgeLabel(msg.role)}
                     </span>
                   </div>
 
@@ -244,7 +293,7 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
                 </div>
                 <div>
                   <span className="text-xs font-bold uppercase tracking-wider text-amber-400/90">
-                    Resolución Vinculante CinePlus AI
+                    Resolución Vinculante del Comité CinePlus AI
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black text-white">
                     {deliberation.verdict.statusLabel}
