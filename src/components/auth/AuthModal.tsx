@@ -60,10 +60,17 @@ export function AuthModal() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // Sincronizar tab con defaultTab al abrir
+  // Sincronizar y limpiar campos al abrir el modal
   useEffect(() => {
     if (isAuthModalOpen) {
       setTab(authModalDefaultTab);
+      setEmail('');
+      setPassword('');
+      setName('');
+      setPhone('');
+      setResetIdentifier('');
+      setResetUserEmail('');
+      setResetUserName('');
       setErrorMsg(null);
       setSuccessMsg(null);
       setResetStep('identify');
@@ -89,6 +96,8 @@ export function AuthModal() {
           throw new Error('Por favor completa tu correo y contraseña.');
         }
         await loginWithEmail(email, password);
+        setEmail('');
+        setPassword('');
         setSuccessMsg('¡Bienvenido de nuevo a CinePlus!');
       } else if (tab === 'register') {
         if (!name.trim() || name.trim().length < 2) {
@@ -101,6 +110,10 @@ export function AuthModal() {
           throw new Error('La contraseña debe tener al menos 6 caracteres.');
         }
         await registerWithEmail(name, email, password, phone);
+        setEmail('');
+        setPassword('');
+        setName('');
+        setPhone('');
         setSuccessMsg('¡Cuenta de Cinéfilo creada exitosamente!');
       }
     } catch (err: unknown) {
