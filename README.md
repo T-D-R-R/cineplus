@@ -214,24 +214,38 @@ El proyecto fue diseñado aplicando los principios de **Clean Architecture**, **
    * **Botón inteligente de retorno al usuario:** Botón flotante `[ Volver a mi ubicación ]` en el mapa para regresar la cámara a las coordenadas del usuario con un solo clic.
    * Supresión visual y programática del diálogo de advertencia de desarrollo de Google Maps.
    * Enlaces directos a las páginas oficiales de las cadenas para compra de boletos y consulta de cartelera.
-4. **Sistema Interactivo de Reseñas y Dataset de Entrenamiento**:
-   * Creación de valoraciones (1 a 5 estrellas) y comentarios.
-   * Persistencia en PostgreSQL (Supabase) con nuevas columnas `titulo_pelicula` y `sentimiento`.
-   * **Dataset de 500 reseñas balanceadas:** Generado mediante `npm run generate:dataset` en [`dataset_resenas_500.csv`](dataset_resenas_500.csv).
-5. **Motor de Machine Learning Nativo (TypeScript / POO)**:
-   * **Clasificador de Sentimientos (Multinomial Naive Bayes con Suavizado de Laplace):** Entrenado con 500 reseñas en español, tokenización con lematización/stemming de sufijos y 100% de precisión en validación Train/Test (80/20).
-   * **Motor de Recomendación de Contenido (k-NN / Similitud Coseno):** Calcula la afinidad matemática sobre vectores de género (multi-hot), calificaciones de TMDb y popularidad.
-   * Ejecutable de pruebas: `npx tsx scripts/test_ml_models.js`.
-6. **Integración con Modelos de Lenguaje (LLM) y Sistema Multi-Agente**:
-   * **Servicio LLM Desacoplado:** Conexión con **Google Gemini API** (`VITE_GEMINI_API_KEY`) y modo cognitivo autónomo para evaluaciones sin clave.
-   * **Comité Asesor de 3 Agentes Especialistas:**
-     1. *Agente Crítico de Arte:* Evalúa guion, dirección y métricas del clasificador de sentimiento ML.
-     2. *Agente Financiero / Logístico:* Analiza precios de boletos en Soles (S/.), formatos (2D/3D/XD) y disponibilidad en cines de Perú (Huánuco, Huancayo, Lima).
-     3. *Agente Moderador / Juez:* Sintetiza el debate, cruza el puntaje de afinidad del usuario y dicta el **Veredicto Final Vinculante**.
+4. **Sistema de Autenticación, Gestión de Perfiles y Reseñas Persistentes**:
+   * **CinePlus ID (Supabase Auth + Modo Demo Autónomo):** Permite inicio de sesión, registro y selector de roles (*Docente Evaluador*, *Crítico Especialista*, *Cinéfilo Registrado*).
+   * **Acceso Rápido en 1 Clic:** Presets preconfigurados para evaluación docente inmediata sin necesidad de ingresar contraseñas.
+   * **Auto-asignación en Reseñas:** Los usuarios autenticados nunca tienen que volver a tipear su nombre en cada película; las valoraciones quedan vinculadas a su perfil y avatar automáticamente.
+   * Ejecutable de pruebas: `npx tsx scripts/test_auth.js`.
+
+5. **Motor de Machine Learning: Benchmark Comparativo de 5 Algoritmos**:
+   * Evaluación de 5 familias algorítmicas de clasificación supervisada sobre 500 reseñas balanceadas (Train/Test Split 80/20):
+     1. *Multinomial Naive Bayes con Suavizado de Laplace:* 🏆 **Modelo Ganador** (100% Accuracy, 100% F1-Score, 3.87 ms entrenamiento, 0.012 ms inferencia).
+     2. *Regresión Logística Multinomial (SGD + Regularización L2):* 100% Accuracy, 100% F1-Score, 44.8 ms entrenamiento.
+     3. *Support Vector Machine (Linear SVM con Hinge Loss):* 100% Accuracy, 100% F1-Score, 41.1 ms entrenamiento.
+     4. *k-Nearest Neighbors (k-NN con TF-IDF y Similitud Coseno):* 100% Accuracy, 100% F1-Score, 0.63 ms inferencia.
+     5. *Árbol de Decisión (CART con Reducción de Impureza de Gini):* 70.0% Accuracy, 66.4% F1-Score, modelo explicable de caja blanca.
+   * Ejecutable de pruebas: `npx tsx scripts/test_ml_benchmark.js`.
+
+6. **Dashboard Interactivo de Machine Learning en Tiempo Real (`/ml-dashboard`)**:
+   * **Laboratorio de Inferencia en Tiempo Real:** Evaluación reactiva simultánea de los 5 algoritmos en < 1 milisegundo con desglose probabilístico y barras cromáticas.
+   * **Ingesta en Caliente (Online Learning / Streaming Ingestion):** Formulario para ingresar nuevas reseñas en vivo; el sistema las incorpora dinámicamente al dataset (500 ➔ 501 ➔ 502) y recalcula los benchmarks y matrices sin recargar la página.
+   * **Inspección de Matrices de Confusión sin Saturación:** Menú desplegable interactivo para alternar entre las matrices 3x3 de los 5 modelos.
+
+7. **Arquitectura Multi-Agente de 5 Roles (1 Orquestador + 3 de Trabajo + 1 Auditor)**:
+   * **Comité Asesor CinePlus AI:**
+     1. 👑 *Orquestadora y Presidenta (Dra. Diana Thorne):* Coordina los turnos, sintetiza los 4 informes y dicta la resolución vinculante con score ponderado (0-100).
+     2. 🎬 *Especialista de Trabajo 1 - Crítica Narrativa (Lic. Valeria Morales):* Evalúa guion, dirección y cruza el análisis de sentimiento del modelo ML.
+     3. 🎟️ *Especialista de Trabajo 2 - Asesor Comercial (Econ. Renzo Carranza):* Evalúa viabilidad económica en Soles (S/.), formatos (2D/3D/XD/IMAX) y cines de Perú (Huánuco, Huancayo, Lima).
+     4. 🔊 *Especialista de Trabajo 3 - Consultor Técnico & Audiovisual (Ing. Mateo Sotomayor):* Evalúa cinematografía, efectos VFX/CGI y mezcla sonora Dolby Atmos.
+     5. 🛡️ *Auditora de Calidad & Fact-Checking (Dra. Beatriz Véliz):* Audita contradicciones lógicas, valida afirmaciones contra datos duros de TMDb y certifica el Índice de Confiabilidad (%).
    * Ejecutable de pruebas: `npx tsx scripts/test_agents.js`.
-7. **Navegación Fluida (SPA)**:
-   * Enrutamiento dinámico con `react-router-dom`.
-   * Restauración automática del scroll al inicio (`ScrollToTop`) al cambiar de página o película.
+
+8. **Navegación Fluida (SPA) y Responsive Design**:
+   * Enrutamiento dinámico con `react-router-dom` con restauración de scroll (`ScrollToTop`).
+   * Acceso directo al Dashboard de ML en vivo desde la barra de navegación y desde la ficha de cada película.
 
 ---
 
