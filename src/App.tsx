@@ -7,35 +7,42 @@ import { MovieDetailPage } from './pages/MovieDetailPage';
 import { TopRatedPage } from './pages/TopRatedPage';
 import { UpcomingPage } from './pages/UpcomingPage';
 import { CinePlusChatbot } from './components/ai/CinePlusChatbot';
+import { AuthProvider } from './context/AuthContext';
+import { AuthModal } from './components/auth/AuthModal';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      {/* Restablecer la barra de desplazamiento arriba en cada cambio de ruta */}
-      <ScrollToTop />
+    <AuthProvider>
+      <BrowserRouter>
+        {/* Restablecer la barra de desplazamiento arriba en cada cambio de ruta */}
+        <ScrollToTop />
 
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
-        {/* Barra de Navegación Global */}
-        <Navbar />
+        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-amber-500 selection:text-slate-950">
+          {/* Barra de Navegación Global */}
+          <Navbar />
 
-        {/* Contenido Principal con Rutas */}
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/pelicula/:id" element={<MovieDetailPage />} />
-            <Route path="/top-rated" element={<TopRatedPage />} />
-            <Route path="/estrenos" element={<UpcomingPage />} />
-            {/* Redirección por defecto si la ruta no existe */}
-            <Route path="*" element={<HomePage />} />
-          </Routes>
-        </main>
+          {/* Contenido Principal con Rutas */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/pelicula/:id" element={<MovieDetailPage />} />
+              <Route path="/top-rated" element={<TopRatedPage />} />
+              <Route path="/estrenos" element={<UpcomingPage />} />
+              {/* Redirección por defecto si la ruta no existe */}
+              <Route path="*" element={<HomePage />} />
+            </Routes>
+          </main>
 
-        {/* Chatbot Multi-Agente Flotante Global */}
-        <CinePlusChatbot />
+          {/* Chatbot Multi-Agente Flotante Global */}
+          <CinePlusChatbot />
 
-        {/* Pie de Página */}
-        <Footer />
-      </div>
-    </BrowserRouter>
+          {/* Modal Global de Autenticación */}
+          <AuthModal />
+
+          {/* Pie de Página */}
+          <Footer />
+        </div>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }

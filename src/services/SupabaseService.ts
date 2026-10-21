@@ -160,6 +160,14 @@ export class SupabaseService extends BaseApiService {
   }
 
   /**
+   * Expone el cliente de Supabase (por ejemplo para Supabase Auth).
+   */
+  public getClient(): SupabaseClient | null {
+    this.initializeClient();
+    return this.client;
+  }
+
+  /**
    * Obtiene todas las reseñas de una película dada.
    */
   public async getReviews(tmdbMovieId: number): Promise<Review[]> {

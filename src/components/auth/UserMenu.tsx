@@ -1,0 +1,116 @@
+import { useState, useRef, useEffect } from 'react';
+import { LogIn, LogOut, GraduationCap, ShieldCheck, ChevronDown, Sparkles } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+
+export function UserMenu() {
+  const { user, isAuthenticated, openAuthModal, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Cerrar al hacer clic fuera
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  if (!isAuthenticated || !user) {
+    return (
+      <button
+        onClick={() => openAuthModal('login')}
+        className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-rose-500/20 hover:from-amber-500/30 hover:to-rose-500/30 border border-amber-500/40 text-amber-300 hover:text-white text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer"
+        title="Iniciar Sesión o Crear Cuenta"
+      >
+        <LogIn className="w-4 h-4 text-amber-400" />
+        <span className="hidden sm:inline">Iniciar Sesión</span>
+        <span className="sm:hidden">Ingresar</span>
+      </button>
+    );
+  }
+
+  const getRoleIcon = () => {
+    switch (user.role) {
+      case 'docente':
+        return <GraduationCap className="w-3.5 h-3.5 text-amber-400" />;
+      case 'critico':
+        return <ShieldCheck className="w-3.5 h-3.5 text-rose-400" />;
+      default:
+        return <Sparkles className="w-3.5 h-3.5 text-indigo-400" />;
+    }
+  };
+
+  const getAvatarGradient = () => {
+    switch (user.role) {
+      case 'docente':
+        return 'from-amber-500 to-yellow-600 text-slate-950';
+      case 'critico':
+        return 'from-rose-500 to-pink-600 text-white';
+      default:
+        return 'from-indigo-500 to-purple-600 text-white';
+    }
+  };
+
+  return (
+    <div className="relative" ref={menuRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl glass-panel hover:border-amber-500/40 transition-all cursor-pointer text-left"
+        aria-expanded={isOpen}
+      >
+        {/* Avatar Circular con Iniciales */}
+        <div
+          className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr ${getAvatarGradient()} flex items-center justify-center font-black text-xs shadow-md shrink-0`}
+        >
+          {user.getInitials()}
+        </div>
+
+        {/* Nombre y Rol (Desktop) */}
+        <div className="hidden md:flex flex-col">
+          <span className="text-xs font-bold text-white truncate max-w-[120px]">{user.name}</span>
+          <span className="text-[10px] text-slate-400 flex items-center gap-1">
+            {getRoleIcon()}
+            {user.getRoleLabel()}
+          </span>
+        </div>
+
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden sm:block" />
+      </button>
+
+      {/* Menú Desplegable */}
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-64 rounded-2xl glass-panel border border-slate-800 bg-slate-900/95 shadow-2xl p-3 z-50 animate-in fade-in zoom-in-95 duration-150">
+          <div className="pb-3 border-b border-slate-800/80 mb-2">
+            <p className="text-xs font-bold text-white truncate">{user.name}</p>
+            <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
+            <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700/60 text-[10px] text-amber-300 font-semibold">
+              {getRoleIcon()}
+              <span>{user.getRoleLabel()}</span>
+            </div>
+            {user.isDemo && (
+              <span className="ml-1.5 inline-block text-[10px] text-slate-500 font-mono">
+                (Modo Demo)
+              </span>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                logout();
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition-colors cursor-pointer text-left"
+            >
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span>Cerrar Sesión</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

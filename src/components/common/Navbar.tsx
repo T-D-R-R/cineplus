@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Clapperboard, Flame, Trophy, Calendar, Settings, Sparkles, Menu, X, Bot } from 'lucide-react';
 import { ConfigModal } from './ConfigModal';
+import { UserMenu } from '../auth/UserMenu';
 import { isTmdbConfigured, isSupabaseConfigured, isGeminiConfigured } from '../../core/config';
 
 export function Navbar() {
@@ -96,6 +97,9 @@ export function Navbar() {
                 IA {geminiOk ? 'Gemini' : 'Multi-Agente'}
               </span>
             </div>
+
+            {/* Menú de Usuario / Login */}
+            <UserMenu />
 
             {/* Botón de Configuración */}
             <button
