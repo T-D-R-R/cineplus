@@ -37,6 +37,16 @@ export interface PasswordResetSession {
 
 export const DEMO_PRESETS: DemoAccountPreset[] = [
   {
+    id: 'admin-teo',
+    name: 'Teo Ricra Rojas (Administrador)',
+    email: 'teoricrarojas@gmail.com',
+    role: 'admin',
+    password: 'Admin2026!',
+    telegramChatId: '2088180188',
+    telegramUsername: 'Dan',
+    description: 'Administrador del Sistema - Control Total, ML & APIs',
+  },
+  {
     id: 'demo-admin-01',
     name: 'Administrador CinePlus',
     email: 'admin@cineplus.pe',
@@ -44,7 +54,7 @@ export const DEMO_PRESETS: DemoAccountPreset[] = [
     password: 'Admin2026!',
     telegramChatId: '2088180188',
     telegramUsername: 'Dan',
-    description: 'Administrador del Sistema - Control Total, ML & APIs',
+    description: 'Administrador del Sistema (Alias Institucional)',
   },
   {
     id: 'demo-usuario-02',
@@ -138,7 +148,8 @@ export class AuthService {
     const cleanEmail = email.trim().toLowerCase();
 
     // 1. Validación estricta de cuenta Administrador del Sistema
-    if (cleanEmail === 'admin@cineplus.pe') {
+    const isAdmin = cleanEmail === 'teoricrarojas@gmail.com' || cleanEmail === 'admin@cineplus.pe';
+    if (isAdmin) {
       const localDb = this.getLocalUsersDb();
       const adminRecord = localDb.find((u) => u.email === cleanEmail);
       const expectedPassword = adminRecord?.password || 'Admin2026!';
@@ -148,14 +159,14 @@ export class AuthService {
       }
 
       const adminUser = new User({
-        id: adminRecord?.id || 'admin-root',
-        email: 'admin@cineplus.pe',
-        name: adminRecord?.name || 'Administrador CinePlus',
+        id: adminRecord?.id || (cleanEmail === 'teoricrarojas@gmail.com' ? 'admin-teo' : 'admin-root'),
+        email: cleanEmail,
+        name: adminRecord?.name || (cleanEmail === 'teoricrarojas@gmail.com' ? 'Teo Ricra Rojas' : 'Administrador CinePlus'),
         role: 'admin',
         phone: adminRecord?.phone,
-        telegramChatId: adminRecord?.telegramChatId,
-        telegramUsername: adminRecord?.telegramUsername,
-        isDemo: true,
+        telegramChatId: adminRecord?.telegramChatId || '2088180188',
+        telegramUsername: adminRecord?.telegramUsername || 'Dan',
+        isDemo: false,
       });
 
       this.setCurrentUser(adminUser);
@@ -256,7 +267,7 @@ export class AuthService {
     if (!cleanEmail || !cleanEmail.includes('@')) {
       throw new Error('Ingresa un correo electrónico válido.');
     }
-    if (cleanEmail === 'admin@cineplus.pe') {
+    if (cleanEmail === 'teoricrarojas@gmail.com' || cleanEmail === 'admin@cineplus.pe') {
       throw new Error('El correo del Administrador ya se encuentra reservado.');
     }
     if (!password || password.length < 6) {
@@ -420,7 +431,7 @@ export class AuthService {
 
     // 1. Si no tiene Telegram enlazado en memoria, buscar si ya envió /start o si es la cuenta del admin
     if (!session.user.telegramChatId) {
-      if (cleanEmail === 'admin@cineplus.pe') {
+      if (cleanEmail === 'teoricrarojas@gmail.com' || cleanEmail === 'admin@cineplus.pe') {
         session.user = new User({
           id: String(session.user.id),
           email: session.user.email,

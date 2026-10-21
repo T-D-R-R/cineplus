@@ -6,8 +6,8 @@ console.log('🧪 ==============================================================
 
 async function runAuthTests() {
   // 1. Probar login de Administrador con contraseña correcta
-  console.log('1️⃣ Evaluando Login de Administrador Oficial (admin@cineplus.pe / Admin2026!):');
-  const adminUser = await authService.loginWithEmail('admin@cineplus.pe', 'Admin2026!');
+  console.log('1️⃣ Evaluando Login de Administrador Oficial (teoricrarojas@gmail.com / Admin2026!):');
+  const adminUser = await authService.loginWithEmail('teoricrarojas@gmail.com', 'Admin2026!');
   console.log(`   • Usuario: ${adminUser.name} (${adminUser.email})`);
   console.log(`   • Rol: [${adminUser.role.toUpperCase()}] -> "${adminUser.getRoleLabel()}"`);
   console.log(`   • ¿Tiene privilegios de Admin?: ${adminUser.isAdmin() ? 'SÍ (Correcto)' : 'NO'}`);
