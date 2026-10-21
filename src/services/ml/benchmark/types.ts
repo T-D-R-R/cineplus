@@ -56,3 +56,33 @@ export interface ITextClassifier {
   train(trainData: TrainingReview[]): { trainingTimeMs: number };
   predict(text: string): SinglePrediction;
 }
+
+export interface MovieMlAnalysisResult {
+  movieId: number;
+  movieTitle: string;
+  totalReviews: number;
+  acceptanceRate: number; // 0 - 100%
+  sentimentBreakdown: {
+    positive: number;
+    neutral: number;
+    negative: number;
+    positivePct: number;
+    neutralPct: number;
+    negativePct: number;
+  };
+  championModel: ModelBenchmarkResult;
+  allModels: ModelBenchmarkResult[];
+  benchmarkReport: ComprehensiveBenchmarkReport;
+  scientificExplanation: string;
+  evaluatedAt: Date;
+  predictions: Array<{
+    id: string | number;
+    userName: string;
+    comment: string;
+    rating: number;
+    predictedSentiment: SentimentCategory;
+    confidence: number;
+    algorithmUsed: string;
+  }>;
+}
+

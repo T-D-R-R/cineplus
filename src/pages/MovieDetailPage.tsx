@@ -12,6 +12,7 @@ import { ReviewList } from '../components/review/ReviewList';
 import { MovieDetailSkeleton } from '../components/common/LoadingSkeleton';
 import { MultiAgentPanel } from '../components/ai/MultiAgentPanel';
 import { MlRecommendationsSection } from '../components/ai/MlRecommendationsSection';
+import { MovieMlDashboard } from '../components/movie/MovieMlDashboard';
 
 export function MovieDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -99,7 +100,14 @@ export function MovieDetailPage() {
       {/* 6. Recomendaciones Similares por Machine Learning (k-NN) */}
       <MlRecommendationsSection currentMovie={movie} />
 
-      {/* 7. Sección Comunitaria de Críticas (Supabase) */}
+      {/* 7. Dashboard de Machine Learning & Aceptación en Vivo (5 Algoritmos AutoML) */}
+      <MovieMlDashboard
+        movieId={movie.id}
+        movieTitle={movie.title}
+        reviews={reviews}
+      />
+
+      {/* 8. Sección Comunitaria de Críticas (Supabase) */}
       <section className="space-y-6 pt-4 border-t border-slate-800/80">
         <div className="grid lg:grid-cols-2 gap-8 items-start">
           {/* Formulario de Nueva Reseña */}
