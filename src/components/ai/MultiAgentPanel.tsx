@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Bot,
   Sparkles,
@@ -10,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   ShieldCheck,
+  Activity,
 } from 'lucide-react';
 import { Movie } from '../../domain/Movie';
 import { AgentCoordinator } from '../../services/agents/AgentCoordinator';
@@ -231,6 +233,21 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
                 {deliberation.auditMetrics.factualNotes}
               </p>
             </div>
+          </div>
+
+          {/* Enlace directo al ML Dashboard para el evaluador */}
+          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
+            <span className="text-slate-400 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-indigo-400" />
+              Respaldado por el laboratorio de 5 algoritmos de predicción (Benchmark 80/20)
+            </span>
+            <Link
+              to="/ml-dashboard"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 hover:text-white font-bold transition-all"
+            >
+              <span>Abrir ML Dashboard en Vivo</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            </Link>
           </div>
 
           {/* Fila 2: Intercambio y Deliberación de los 5 Agentes */}

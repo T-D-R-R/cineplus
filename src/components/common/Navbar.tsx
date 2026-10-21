@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Clapperboard, Flame, Trophy, Calendar, Settings, Sparkles, Menu, X, Bot } from 'lucide-react';
+import { Clapperboard, Flame, Trophy, Calendar, Settings, Sparkles, Menu, X, Bot, Activity } from 'lucide-react';
 import { ConfigModal } from './ConfigModal';
 import { UserMenu } from '../auth/UserMenu';
 import { isTmdbConfigured, isSupabaseConfigured, isGeminiConfigured } from '../../core/config';
@@ -14,6 +14,7 @@ export function Navbar() {
     { to: '/', label: 'Cartelera', icon: Flame },
     { to: '/top-rated', label: 'Top 10', icon: Trophy },
     { to: '/estrenos', label: 'Próximos Estrenos', icon: Calendar },
+    { to: '/ml-dashboard', label: 'ML Dashboard', icon: Activity },
   ];
 
   const tmdbOk = isTmdbConfigured();
