@@ -61,6 +61,15 @@ export class OrchestratorAgent {
       badgeClass = 'bg-red-500/20 text-red-400 border-red-500/40';
     }
 
+    let theatricalContext = '';
+    if (movie.theatricalStatus === 'OUT_OF_THEATERS') {
+      theatricalContext =
+        'AVISO CRÍTICO DE CARTELERA: La película ya FINALIZÓ su ciclo comercial en cines de Perú y se encuentra DISPONIBLE EN PLATAFORMAS DE STREAMING y formato digital. NO está en salas de cine físicas. En tu veredicto, aconseja al usuario disfrutarla en streaming desde casa hoy mismo y aclara que no compre boletos de cine físico.\n';
+    } else if (movie.theatricalStatus === 'UPCOMING') {
+      theatricalContext =
+        `AVISO DE CARTELERA: La película es un PRÓXIMO ESTRENO en cines peruanos (Fecha estimada: ${movie.peruReleaseDate || 'Próximamente'}). Aún no está proyectándose en salas. Recomienda seguir la apertura de preventa.\n`;
+    }
+
     const systemPrompt =
       'Eres la Dra. Diana Thorne, Orquestadora y Presidenta del Comité de CinePlus AI. ' +
       'Tu responsabilidad suprema es sintetizar las deliberaciones de los 3 especialistas de trabajo ' +
@@ -69,14 +78,14 @@ export class OrchestratorAgent {
 
     const userPrompt =
       `Película a juzgar: "${movie.title}".\n` +
+      theatricalContext +
       `1. Crítica Narrativa: "${criticMessage.content}"\n` +
       `2. Asesoría Comercial: "${logisticsMessage.content}"\n` +
       `3. Evaluación Técnica: "${technicalMessage.content}"\n` +
       `4. Certificación Auditora: "${auditorMessage.content}"\n` +
       `Afinidad Personalizada del Usuario (ML): ${userAffinityScore}%\n` +
       `Score Ponderado: ${compositeScore}/100 -> Categoría: ${statusLabel}.\n\n` +
-      'Instrucción: Dicta el Veredicto Final en 2 a 3 oraciones claras, concluyendo con una recomendación directa ' +
-      'para el usuario sobre si debe comprar su entrada hoy.';
+      'Instrucción: Dicta el Veredicto Final en 2 a 3 oraciones claras, concluyendo con una recomendación ejecutiva directa para el espectador.';
 
     let content = '';
     let providerUsed = 'Google Gemini (Modo Autónomo)';
@@ -93,7 +102,13 @@ export class OrchestratorAgent {
       providerUsed = result.providerUsed;
     } catch {
       // Fallback cognitivo de síntesis ejecutiva
-      content = `Tras contrastar los informes narrativo, logístico y técnico, y con la conformidad plena del dictamen de auditoría, este comité resuelve que la obra justifica la inversión de la entrada en sala de cine. Recomendamos reservar en funciones nocturnas en formato XD o 2D estándar para apreciar la calidad audiovisual certificada.`;
+      if (movie.theatricalStatus === 'OUT_OF_THEATERS') {
+        content = `Tras contrastar los informes narrativo, logístico y técnico, este comité decreta que la obra puede disfrutarse plenamente en el entorno doméstico. Al haber concluido su temporada en cines de Perú, recomendamos verla hoy mismo a través de plataformas de streaming o alquiler digital.`;
+      } else if (movie.theatricalStatus === 'UPCOMING') {
+        content = `Tras evaluar la propuesta artística y comercial, este comité recomienda aguardar su estreno oficial en salas comerciales y reservar con anticipación en preventa para disfrutarla en formato de gran formato.`;
+      } else {
+        content = `Tras contrastar los informes narrativo, logístico y técnico, y con la conformidad plena del dictamen de auditoría, este comité resuelve que la obra justifica la inversión de la entrada en sala de cine. Recomendamos reservar en funciones nocturnas en formato XD o 2D estándar para apreciar la calidad audiovisual certificada.`;
+      }
     }
 
     const message: AgentMessage = {
@@ -113,14 +128,28 @@ export class OrchestratorAgent {
       timestamp: new Date(),
     };
 
+    let bestShowtimeRecommendation = 'Funciones intermedias y nocturnas (18:00 - 21:30 hrs) en sala acústica XD / 2D.';
+    let valueForMoney = compositeScore >= 75 ? 'Excelente retorno de inversión (Valor por dinero)' : 'Costo promedio de mercado';
+
+    if (movie.theatricalStatus === 'OUT_OF_THEATERS') {
+      bestShowtimeRecommendation = 'Disponible actualmente en plataformas de Streaming / Formato Digital';
+      valueForMoney = 'Ver en Streaming / Formato Doméstico';
+    } else if (movie.theatricalStatus === 'UPCOMING') {
+      bestShowtimeRecommendation = `Próximo estreno en cines de Perú (${movie.peruReleaseDate || 'Próximamente'}) - Atento a la preventa`;
+      valueForMoney = 'Estreno programado en salas';
+    } else if (status === 'ESPERAR_STREAMING') {
+      bestShowtimeRecommendation = 'Recomendado esperar su llegada a plataformas de Streaming.';
+      valueForMoney = 'Ahorro sugerido (Esperar a Streaming)';
+    }
+
     const verdict: FinalVerdict = {
       status,
       statusLabel,
       badgeClass,
       score: compositeScore,
       summary: content,
-      bestShowtimeRecommendation: 'Funciones intermedias y nocturnas (18:00 - 21:30 hrs) en sala acústica XD.',
-      valueForMoney: compositeScore >= 75 ? 'Excelente retorno de inversión (Valor por dinero)' : 'Costo promedio de mercado',
+      bestShowtimeRecommendation,
+      valueForMoney,
     };
 
     return { message, verdict };

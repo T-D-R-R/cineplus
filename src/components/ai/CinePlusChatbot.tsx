@@ -112,13 +112,38 @@ function renderFormattedMessage(text: string) {
 }
 
 const KNOWN_MOVIES = [
-  { id: 693134, title: 'Dune: Parte Dos', keywords: ['dune', 'duna', 'arrakis', 'chalamet'] },
-  { id: 933260, title: 'La Sustancia', keywords: ['sustancia', 'substance', 'demi moore'] },
-  { id: 533535, title: 'Deadpool & Wolverine', keywords: ['deadpool', 'wolverine', 'marvel'] },
-  { id: 1022789, title: 'Intensa-Mente 2', keywords: ['intensa', 'mente', 'intensamente', 'inside out', 'ansiedad'] },
-  { id: 872585, title: 'Oppenheimer', keywords: ['oppenheimer', 'nolan', 'bomba'] },
-  { id: 346698, title: 'Barbie', keywords: ['barbie', 'ken', 'gerwig'] },
-  { id: 763215, title: 'Damsel', keywords: ['damsel', 'millie bobby'] },
+  { id: 693134, title: 'Dune: Parte Dos', keywords: ['dune', 'duna', 'arrakis', 'chalamet'], theatricalStatus: 'OUT_OF_THEATERS' as const },
+  { id: 933260, title: 'La Sustancia', keywords: ['sustancia', 'substance', 'demi moore'], theatricalStatus: 'OUT_OF_THEATERS' as const },
+  { id: 533535, title: 'Deadpool & Wolverine', keywords: ['deadpool', 'wolverine', 'marvel'], theatricalStatus: 'OUT_OF_THEATERS' as const },
+  { id: 1022789, title: 'Intensa-Mente 2', keywords: ['intensa', 'mente', 'intensamente', 'inside out', 'ansiedad'], theatricalStatus: 'OUT_OF_THEATERS' as const },
+  { id: 872585, title: 'Oppenheimer', keywords: ['oppenheimer', 'nolan', 'bomba'], theatricalStatus: 'OUT_OF_THEATERS' as const },
+  { id: 346698, title: 'Barbie', keywords: ['barbie', 'ken', 'gerwig'], theatricalStatus: 'OUT_OF_THEATERS' as const },
+  { id: 763215, title: 'Damsel', keywords: ['damsel', 'millie bobby'], theatricalStatus: 'OUT_OF_THEATERS' as const },
+];
+
+// Diccionario semántico universal de países y gentilicios para TMDb (más de 190 países soportados)
+interface CountryMeta {
+  code: string;
+  name: string;
+  keywords: string[];
+}
+
+const UNIVERSAL_COUNTRIES: CountryMeta[] = [
+  { code: 'PE', name: 'Perú', keywords: ['peru', 'perú', 'peruana', 'peruanas', 'peruano', 'peruanos', 'nacional', 'cine peruano', 'talento nacional', 'cine nacional'] },
+  { code: 'KR', name: 'Corea del Sur', keywords: ['corea', 'coreana', 'coreanas', 'coreano', 'coreanos', 'kdrama', 'k-drama', 'surcoreana', 'surcoreano', 'seul', 'seúl'] },
+  { code: 'MX', name: 'México', keywords: ['mexico', 'méxico', 'mexicana', 'mexicanas', 'mexicano', 'mexicanos', 'cine mexicano'] },
+  { code: 'ES', name: 'España', keywords: ['españa', 'español', 'española', 'españoles', 'españolas', 'cine español', 'iberico', 'ibérico'] },
+  { code: 'AR', name: 'Argentina', keywords: ['argentina', 'argentino', 'argentinos', 'argentinas', 'cine argentino', 'porteño'] },
+  { code: 'JP', name: 'Japón', keywords: ['japon', 'japón', 'japones', 'japonesa', 'japoneses', 'japonesas', 'anime', 'manga', 'tokio'] },
+  { code: 'FR', name: 'Francia', keywords: ['francia', 'frances', 'francés', 'francesa', 'franceses', 'francesas', 'cine frances', 'cine francés'] },
+  { code: 'IT', name: 'Italia', keywords: ['italia', 'italiano', 'italiana', 'italianos', 'italianas', 'cine italiano'] },
+  { code: 'CO', name: 'Colombia', keywords: ['colombia', 'colombiano', 'colombiana', 'colombianos', 'colombianas'] },
+  { code: 'CL', name: 'Chile', keywords: ['chile', 'chileno', 'chilena', 'chilenos', 'chilenas'] },
+  { code: 'BR', name: 'Brasil', keywords: ['brasil', 'brasileño', 'brasileña', 'brasileños', 'brasileñas'] },
+  { code: 'US', name: 'Estados Unidos', keywords: ['estados unidos', 'usa', 'hollywood', 'estadounidense', 'estadounidenses', 'gringo', 'norteamericana', 'norteamericano'] },
+  { code: 'GB', name: 'Reino Unido', keywords: ['reino unido', 'britanico', 'británico', 'britanica', 'británica', 'inglaterra', 'inglesa', 'ingles'] },
+  { code: 'DE', name: 'Alemania', keywords: ['alemania', 'aleman', 'alemán', 'alemana', 'alemanes'] },
+  { code: 'IN', name: 'India', keywords: ['india', 'bollywood', 'hindu', 'hindú'] },
 ];
 
 // Diccionario semántico de géneros para TMDb
@@ -132,7 +157,7 @@ const TMDB_GENRES: Record<string, { id: number; name: string; keywords: string[]
   cienciaFiccion: { id: 878, name: 'Ciencia Ficción', keywords: ['ciencia ficcion', 'ciencia ficción', 'scifi', 'sci-fi', 'espacio', 'alien', 'futuro', 'robots'] },
   drama: { id: 18, name: 'Drama', keywords: ['drama', 'emotiva', 'triste', 'llorar', 'conmovedora'] },
   romance: { id: 10749, name: 'Romance', keywords: ['romance', 'romantica', 'amor', 'pareja'] },
-  familia: { id: 10751, name: 'Familiar', keywords: ['familiar', 'familia', 'niños', 'hijos'] },
+  familia: { id: 10751, name: 'Familiar', keywords: ['familia', 'familiar', 'niños', 'hijos'] },
 };
 
 export function CinePlusChatbot() {
@@ -238,7 +263,14 @@ export function CinePlusChatbot() {
       const lower = textToSend.toLowerCase();
 
       // 1. Detectar si el usuario preguntó por una película específica
-      let matchedMovieData: { id: number; title: string; genres: string[]; overview: string } | null = null;
+      let matchedMovieData: {
+        id: number;
+        title: string;
+        genres: string[];
+        overview: string;
+        theatricalStatus: 'IN_THEATERS' | 'UPCOMING' | 'OUT_OF_THEATERS' | 'UNKNOWN';
+        originCountry: string;
+      } | null = null;
 
       for (const m of billboardMovies) {
         const titleNorm = m.title.toLowerCase();
@@ -249,6 +281,8 @@ export function CinePlusChatbot() {
             title: m.title,
             genres: m.genres.map((g) => g.name),
             overview: m.overview,
+            theatricalStatus: m.theatricalStatus,
+            originCountry: m.getCountryDisplayName(),
           };
           break;
         }
@@ -262,6 +296,8 @@ export function CinePlusChatbot() {
               title: m.title,
               genres: ['Cine'],
               overview: '',
+              theatricalStatus: m.theatricalStatus || 'OUT_OF_THEATERS',
+              originCountry: 'Internacional',
             };
             break;
           }
@@ -333,6 +369,8 @@ export function CinePlusChatbot() {
           // Fallback
         }
 
+        const isMovieOutOfTheaters = matchedMovieData.theatricalStatus === 'OUT_OF_THEATERS';
+
         // Consultar a los 4 especialistas en paralelo (Alta velocidad y robustez)
         const [criticRes, logisticsRes, technicalRes, auditorRes] = await Promise.all([
           // 1. Crítica Narrativa (Valeria Morales / Google Gemini)
@@ -348,47 +386,56 @@ export function CinePlusChatbot() {
 
           // 2. Asesor Comercial (Renzo Carranza / DeepSeek V3)
           llm.generateTextWithMetadata(
-            `Pregunta del usuario: "${textToSend}". Analiza los costos y conveniencia para "${matchedMovieData.title}" en cines de Perú (Referencia: ${cinemaInfo}). Responde en 2 oraciones recomendando formato de sala (2D o XD) y presupuesto en Soles (S/.).`,
+            isMovieOutOfTheaters
+              ? `Pregunta del usuario: "${textToSend}". La película "${matchedMovieData.title}" ya finalizó su temporada en salas de cine de Perú (Fin de Temporada) y se encuentra DISPONIBLE EN STREAMING y catálogo digital doméstico. No tiene funciones en salas de cine. Responde en 2 oraciones recomendando disfrutarla desde casa en streaming sin gastar en entradas de sala física.`
+              : `Pregunta del usuario: "${textToSend}". Analiza los costos y conveniencia para "${matchedMovieData.title}" en cines de Perú (Referencia: ${cinemaInfo}). Responde en 2 oraciones recomendando formato de sala (2D o XD) y presupuesto en Soles (S/.).`,
             {
               provider: 'openrouter',
               model: 'deepseek/deepseek-chat',
               maxTokens: 250,
-              systemPrompt: 'Eres Renzo Carranza, Asesor Comercial de CinePlus con DeepSeek V3. Sé pragmático con tarifas en Soles (S/.) y salas peruanas sin saludos.',
+              systemPrompt: isMovieOutOfTheaters
+                ? 'Eres Renzo Carranza, Asesor Comercial de CinePlus con DeepSeek V3. Analiza con pragmatismo la conveniencia de verla en streaming desde casa sin saludos.'
+                : 'Eres Renzo Carranza, Asesor Comercial de CinePlus con DeepSeek V3. Sé pragmático con tarifas en Soles (S/.) y salas peruanas sin saludos.',
             }
           ),
 
           // 3. Consultor Técnico & Audiovisual (Ing. Mateo Sotomayor / Meta LLaMA 3.3)
           llm.generateTextWithMetadata(
-            `Pregunta del usuario: "${textToSend}". Evalúa el despliegue técnico de "${matchedMovieData.title}" (Géneros: ${matchedMovieData.genres.join(', ')}). Responde en 2 oraciones sobre la cinematografía, efectos visuales y si amerita sala con pantalla envolvente XD y sonido multicanal en Perú.`,
+            `Pregunta del usuario: "${textToSend}". Evalúa el despliegue técnico de "${matchedMovieData.title}" (Géneros: ${matchedMovieData.genres.join(', ')}). Responde en 2 oraciones sobre la cinematografía, efectos visuales y si amerita sala con pantalla envolvente XD o buen sistema sonoro en casa.`,
             {
               provider: 'openrouter',
               model: 'meta-llama/llama-3.3-70b-instruct',
               maxTokens: 250,
-              systemPrompt: 'Eres el Ing. Mateo Sotomayor, Consultor Técnico con Meta LLaMA 3.3. Evalúa fotografía, efectos visuales y sonido envolvente en salas sin saludos.',
+              systemPrompt: 'Eres el Ing. Mateo Sotomayor, Consultor Técnico con Meta LLaMA 3.3. Evalúa fotografía, efectos visuales y sonido envolvente sin saludos.',
             }
           ),
 
           // 4. Auditora de Calidad & Fact-Checking (Dra. Beatriz Véliz / Qwen 2.5)
           llm.generateTextWithMetadata(
-            `Pregunta del usuario: "${textToSend}". Audita y calibra constructivamente la evaluación de "${matchedMovieData.title}". Responde en 2 oraciones certificando la consistencia con TMDb y confirmando la disponibilidad de salas y formatos accesibles en la cartelera peruana.`,
+            `Pregunta del usuario: "${textToSend}". Audita y calibra constructivamente la evaluación de "${matchedMovieData.title}". Responde en 2 oraciones certificando la consistencia con TMDb y confirmando la disponibilidad (${isMovieOutOfTheaters ? 'plataformas de streaming' : 'cartelera peruana'}).`,
             {
               provider: 'openrouter',
               model: 'qwen/qwen-2.5-72b-instruct',
               maxTokens: 250,
-              systemPrompt: 'Eres la Dra. Beatriz Véliz, Auditora de Calidad con Qwen 2.5. Calibra constructivamente y certifica la consistencia para la cartelera en Perú sin saludos.',
+              systemPrompt: 'Eres la Dra. Beatriz Véliz, Auditora de Calidad con Qwen 2.5. Calibra constructivamente y certifica la consistencia para el espectador sin saludos.',
             }
           ),
         ]);
 
         // 5. Orquestadora y Presidenta (Dra. Diana Thorne / Gemini Core)
+        const theatricalGuidance = isMovieOutOfTheaters
+          ? 'AVISO DE CARTELERA: La película ya culminó su temporada en cines de Perú y está disponible en streaming / formato digital. Aconseja al usuario disfrutarla en casa en streaming y confirma explícitamente que no compre entradas de cine físico.\n'
+          : '';
+
         const conciergePrompt =
           `El usuario preguntó: "${textToSend}" sobre "${matchedMovieData.title}".\n` +
+          theatricalGuidance +
           `1. Crítica Narrativa (Valeria / Gemini): "${criticRes.text}"\n` +
           `2. Asesoría Comercial (Renzo / DeepSeek V3): "${logisticsRes.text}"\n` +
           `3. Dirección Técnica (Mateo / Meta LLaMA 3.3): "${technicalRes.text}"\n` +
           `4. Certificación de Auditoría (Beatriz / Qwen 2.5): "${auditorRes.text}"\n` +
           `Afinidad de audiencia (Naive Bayes ML): ${posPct}% favorable.\n\n` +
-          `Tu tarea como Presidenta del Comité CinePlus: Redacta UNA SOLA respuesta ejecutiva y concluyente para el espectador en 1 o 2 párrafos concisos. Integra los aspectos artísticos, la recomendación de sala y los precios en Soles (S/.), dictando si le conviene verla hoy.`;
+          `Tu tarea como Presidenta del Comité CinePlus: Redacta UNA SOLA respuesta ejecutiva y concluyente para el espectador en 1 o 2 párrafos concisos. Integra los aspectos artísticos, la recomendación de visualización (${isMovieOutOfTheaters ? 'plataformas de streaming desde el hogar' : 'salas comerciales y precios en Soles S/.'}) y dicta si le conviene verla hoy.`;
 
         const conciergeRes = await llm.generateTextWithMetadata(conciergePrompt, {
           provider: 'gemini',
@@ -461,7 +508,16 @@ export function CinePlusChatbot() {
         return;
       }
 
-      // CASO C: Análisis Semántico de Género y Consulta Dinámica a TMDb
+      // CASO C: Análisis Semántico de País y Consulta Universal a TMDb (190+ países)
+      let detectedCountry: CountryMeta | null = null;
+      for (const c of UNIVERSAL_COUNTRIES) {
+        if (c.keywords.some((kw) => lower.includes(kw))) {
+          detectedCountry = c;
+          break;
+        }
+      }
+
+      // CASO D: Análisis Semántico de Género y Consulta Dinámica a TMDb
       let detectedGenreKey = '';
       for (const [key, meta] of Object.entries(TMDB_GENRES)) {
         if (meta.keywords.some((kw) => lower.includes(kw))) {
@@ -472,7 +528,17 @@ export function CinePlusChatbot() {
 
       const activeGenreMeta = detectedGenreKey ? TMDB_GENRES[detectedGenreKey] : null;
 
-      // 1. Filtrar películas en cartelera actual de TMDb que coincidan con el género
+      // 1. Si se pidió un país específico, consultar TMDb Discover por país
+      let topCountryMoviesFromTmdb: Movie[] = [];
+      if (detectedCountry) {
+        try {
+          topCountryMoviesFromTmdb = await tmdb.getMoviesByCountry(detectedCountry.code);
+        } catch {
+          // Fallback
+        }
+      }
+
+      // 2. Filtrar películas en cartelera actual de TMDb que coincidan con el género
       let inTheatersGenreMatches: Movie[] = [];
       if (activeGenreMeta && billboardMovies.length > 0) {
         inTheatersGenreMatches = billboardMovies.filter((m) =>
@@ -484,7 +550,7 @@ export function CinePlusChatbot() {
         );
       }
 
-      // 2. Si se pidió un género específico, consultar TMDb Discover para traer las mejores del género
+      // 3. Si se pidió un género específico, consultar TMDb Discover para traer las mejores del género
       let topGenreMoviesFromTmdb: Movie[] = [];
       if (activeGenreMeta) {
         try {
@@ -496,36 +562,47 @@ export function CinePlusChatbot() {
 
       // Combinar recomendaciones para mostrar tarjetas en el chat
       const cardCandidates: Movie[] = [];
-      // Primero las de cartelera
-      for (const m of inTheatersGenreMatches) {
-        if (!cardCandidates.some((c) => c.id === m.id)) cardCandidates.push(m);
-      }
-      // Luego las mejores de TMDb discover
-      for (const m of topGenreMoviesFromTmdb) {
-        if (!cardCandidates.some((c) => c.id === m.id)) cardCandidates.push(m);
-        if (cardCandidates.length >= 4) break;
+      if (detectedCountry && topCountryMoviesFromTmdb.length > 0) {
+        cardCandidates.push(...topCountryMoviesFromTmdb.slice(0, 4));
+      } else if (activeGenreMeta) {
+        // Primero las de cartelera
+        for (const m of inTheatersGenreMatches) {
+          if (!cardCandidates.some((c) => c.id === m.id)) cardCandidates.push(m);
+        }
+        // Luego las mejores de TMDb discover
+        for (const m of topGenreMoviesFromTmdb) {
+          if (!cardCandidates.some((c) => c.id === m.id)) cardCandidates.push(m);
+          if (cardCandidates.length >= 4) break;
+        }
       }
 
-      // Si no hubo género específico, usar las más populares de cartelera para tarjetas
+      // Si no hubo país ni género específico, usar las más populares de cartelera para tarjetas
       if (cardCandidates.length === 0 && billboardMovies.length > 0) {
         cardCandidates.push(...billboardMovies.slice(0, 4));
       }
 
       // Contexto enriquecido para el prompt de IA
       let promptContext = '';
-      if (activeGenreMeta) {
+      if (detectedCountry) {
+        promptContext += `PAÍS / NACIONALIDAD SOLICITADA POR EL USUARIO: "${detectedCountry.name}" (Código ISO: ${detectedCountry.code}).\n`;
+        if (topCountryMoviesFromTmdb.length > 0) {
+          promptContext += `Películas oficiales de ${detectedCountry.name} obtenidas en tiempo real desde TMDb:\n` +
+            topCountryMoviesFromTmdb.slice(0, 5).map((m) => `- "${m.title}" (Año: ${m.releaseDate ? m.releaseDate.slice(0, 4) : 'Reciente'}, País de origen: ${m.getCountryDisplayName()}, TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 120)}...`).join('\n') + '\n';
+        }
+        promptContext += `DIRECTRIZ TAXATIVA: Recomienda ÚNICAMENTE películas auténticas de ${detectedCountry.name}. NO menciones títulos de otros países ni atribuyas falsamente esta procedencia a películas extranjeras.\n`;
+      } else if (activeGenreMeta) {
         promptContext += `GÉNERO SOLICITADO POR EL USUARIO: "${activeGenreMeta.name}".\n`;
         if (inTheatersGenreMatches.length > 0) {
           promptContext += `Películas de ${activeGenreMeta.name} EN CARTELERA AHORA (Cineplanet / Cinemark):\n` +
-            inTheatersGenreMatches.slice(0, 3).map((m) => `- "${m.title}" (TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 100)}...`).join('\n') + '\n';
+            inTheatersGenreMatches.slice(0, 3).map((m) => `- "${m.title}" (País de origen: ${m.getCountryDisplayName()}, TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 100)}...`).join('\n') + '\n';
         }
         if (topGenreMoviesFromTmdb.length > 0) {
           promptContext += `Otras películas destacadas de ${activeGenreMeta.name} en el catálogo de TMDb:\n` +
-            topGenreMoviesFromTmdb.slice(0, 3).map((m) => `- "${m.title}" (Año: ${m.releaseDate.slice(0, 4)}, TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 100)}...`).join('\n') + '\n';
+            topGenreMoviesFromTmdb.slice(0, 3).map((m) => `- "${m.title}" (Año: ${m.releaseDate.slice(0, 4)}, País de origen: ${m.getCountryDisplayName()}, TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 100)}...`).join('\n') + '\n';
         }
       } else {
         promptContext += `Cartelera general actual en cines de Perú (TMDb):\n` +
-          billboardMovies.slice(0, 6).map((m) => `- "${m.title}" (${m.genres.map((g) => g.name).join(', ')}) [TMDb: ${m.voteAverage}/10]`).join('\n') + '\n';
+          billboardMovies.slice(0, 6).map((m) => `- "${m.title}" (País de origen: ${m.getCountryDisplayName()}, Géneros: ${m.genres.map((g) => g.name).join(', ')}) [TMDb: ${m.voteAverage}/10]`).join('\n') + '\n';
       }
 
       const generalPrompt =
@@ -536,7 +613,11 @@ export function CinePlusChatbot() {
         `Eres Diana Thorne, moderadora del Comité CinePlus AI (plataforma de cartelera y películas en Perú).\n` +
         `- Si la pregunta es sobre medicina, salud, política, recetas, matemáticas o temas externos:\n` +
         `  Rechaza amablemente la consulta con cordialidad, indicando que como IA de CinePlus tu especialidad se circunscribe estrictamente al cine y la cartelera peruana. Invita al usuario a consultar sobre películas.\n` +
-        `- Si la pregunta solicita recomendaciones (generales o de un género como terror, acción, etc.):\n` +
+        `- DIRECTRIZ ESTRICTA DE NACIONALIDADES Y PAÍSES DE ORIGEN:\n` +
+        `  Cada película listada tiene su país de origen oficial (ejemplo: "Hope: El primer impacto" es de Corea del Sur, "Matchbox" es de Estados Unidos, etc.).\n` +
+        `  NUNCA llames "talento nacional" o "cine peruano" a producciones de Corea del Sur, EE.UU. u otros países extranjeros.\n` +
+        `  Si el usuario pregunta por películas de un país específico (ej: Perú, Corea, México, España, etc.), limítate estricta y exclusivamente a obras de ese país.\n` +
+        `- Si la pregunta solicita recomendaciones:\n` +
         `  Analiza las películas proporcionadas de TMDb y recomienda 2 o 3 opciones destacadas. Coloca sus títulos exactos en **negrita**, menciona por qué verlas (actuaciones, atmósfera o impacto) e indica si están en cartelera o en catálogo. Menciona precios en Soles.\n` +
         `- Si la pregunta sí está relacionada con cine en general:\n` +
         `  Responde con calidez y criterio cinematográfico en 1 solo mensaje completo y conciso.`;

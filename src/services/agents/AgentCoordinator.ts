@@ -89,37 +89,48 @@ export class AgentCoordinator {
     );
 
     // -------------------------------------------------------------
-    // Paso 3: Agente 3 - Asesor Comercial y Logístico (Cines en Soles)
+    // Paso 3: Agente 3 - Asesor Comercial y Logístico (Cines en Soles / Streaming)
     // -------------------------------------------------------------
-    onStepUpdate?.('3/6 [Agente 3 - Comercial]: Cotizando salas peruanas (Huánuco, Huancayo, Lima) y tarifas en Soles...');
+    const isOutOfTheaters = movie.theatricalStatus === 'OUT_OF_THEATERS';
+    const isUpcoming = movie.theatricalStatus === 'UPCOMING';
+
+    if (isOutOfTheaters) {
+      onStepUpdate?.('3/6 [Agente 3 - Comercial]: Evaluando disponibilidad en plataformas de streaming y mercado digital...');
+    } else if (isUpcoming) {
+      onStepUpdate?.('3/6 [Agente 3 - Comercial]: Analizando expectativas de taquilla y apertura de preventa en salas...');
+    } else {
+      onStepUpdate?.('3/6 [Agente 3 - Comercial]: Cotizando salas peruanas (Huánuco, Huancayo, Lima) y tarifas en Soles...');
+    }
     
     const showtimesSummary: ShowtimeDataSummary[] = [];
-    try {
-      const cinemaGroups = await this.supabaseService.getCinemasForMovie(movieIdNum);
-      if (cinemaGroups.length > 0) {
-        for (const group of cinemaGroups) {
-          const formats = new Set<string>();
-          const prices: number[] = [];
-          const hours: string[] = [];
+    if (!isOutOfTheaters && !isUpcoming) {
+      try {
+        const cinemaGroups = await this.supabaseService.getCinemasForMovie(movieIdNum);
+        if (cinemaGroups.length > 0) {
+          for (const group of cinemaGroups) {
+            const formats = new Set<string>();
+            const prices: number[] = [];
+            const hours: string[] = [];
 
-          for (const st of group.showtimes) {
-            formats.add(st.format || '2D');
-            prices.push(st.price);
-            hours.push(st.time);
+            for (const st of group.showtimes) {
+              formats.add(st.format || '2D');
+              prices.push(st.price);
+              hours.push(st.time);
+            }
+
+            showtimesSummary.push({
+              theaterName: group.cinema.name,
+              city: group.cinema.city || 'Huánuco',
+              formats: formats.size > 0 ? Array.from(formats) : ['2D', 'XD'],
+              minPrice: prices.length > 0 ? Math.min(...prices) : 18.0,
+              maxPrice: prices.length > 0 ? Math.max(...prices) : 26.0,
+              availableHours: hours.length > 0 ? hours.slice(0, 3) : ['16:00', '19:00', '21:30'],
+            });
           }
-
-          showtimesSummary.push({
-            theaterName: group.cinema.name,
-            city: group.cinema.city || 'Huánuco',
-            formats: formats.size > 0 ? Array.from(formats) : ['2D', 'XD'],
-            minPrice: prices.length > 0 ? Math.min(...prices) : 18.0,
-            maxPrice: prices.length > 0 ? Math.max(...prices) : 26.0,
-            availableHours: hours.length > 0 ? hours.slice(0, 3) : ['16:00', '19:00', '21:30'],
-          });
         }
+      } catch {
+        // Respaldo
       }
-    } catch {
-      // Respaldo
     }
 
     const logisticsMessage = await this.logisticsAgent.evaluate(movie, showtimesSummary);

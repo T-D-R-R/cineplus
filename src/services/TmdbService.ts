@@ -401,6 +401,128 @@ export class TmdbService extends BaseApiService {
       );
     }
   }
+
+  /**
+   * Obtiene películas filtradas por país de origen (ISO 3166-1 alpha-2, ej: 'PE', 'KR', 'MX', 'ES', 'JP', 'US').
+   * Consulta dinámicamente el endpoint /discover de TMDb con soporte universal para más de 190 países.
+   */
+  public async getMoviesByCountry(countryCode: string, page = 1): Promise<Movie[]> {
+    const code = countryCode.toUpperCase().trim();
+    const authQuery = this.getAuthQuery();
+    if (!authQuery) {
+      const fallbackList = MOCK_COUNTRY_MOVIES[code] || MOCK_MOVIES;
+      return fallbackList.map((m) => Movie.fromTmdbDto(m));
+    }
+
+    try {
+      const data = await this.request<{ results: TmdbMovieDto[] }>(
+        `/discover/movie?${authQuery}&language=es-MX&with_origin_country=${encodeURIComponent(
+          code
+        )}&sort_by=popularity.desc&page=${page}`
+      );
+      return (data.results || []).map((dto) => Movie.fromTmdbDto(dto));
+    } catch (err) {
+      console.warn(`Error descubriendo películas para país ${code}, usando fallback:`, err);
+      const fallbackList = MOCK_COUNTRY_MOVIES[code] || MOCK_MOVIES;
+      return fallbackList.map((m) => Movie.fromTmdbDto(m));
+    }
+  }
 }
+
+// Catálogo de contingencia de producciones por país para modo offline o fallback
+const MOCK_COUNTRY_MOVIES: Record<string, TmdbMovieDto[]> = {
+  PE: [
+    {
+      id: 1256781,
+      title: 'Vaguito: Te esperaré en la orilla',
+      overview: 'La conmovedora historia real de Vaguito, un perro que espera día a día en la playa de Punta Hermosa el regreso de su amigo pescador.',
+      poster_path: '/7m3Yg3yG5qL8uN9p1o2K4v5w6x7.jpg',
+      backdrop_path: '/8n4Zh4zH6rM9vO0q2p3L5w6x7y8.jpg',
+      vote_average: 7.5,
+      vote_count: 140,
+      release_date: '2024-04-18',
+      origin_country: ['PE'],
+      genres: [{ id: 18, name: 'Drama' }, { id: 10751, name: 'Familia' }],
+    },
+    {
+      id: 984523,
+      title: 'Willaq Pirqa, el cine de mi pueblo',
+      overview: 'Sistu y su comunidad en los Andes descubren la magia del cine por primera vez en una aldea quechua.',
+      poster_path: '/3b1r5p7q9s0t2u4v6w8x0y2z4a6.jpg',
+      backdrop_path: '/4c2s6q8r0t1u3v5w7x9y1z3a5b7.jpg',
+      vote_average: 8.3,
+      vote_count: 95,
+      release_date: '2022-12-08',
+      origin_country: ['PE'],
+      genres: [{ id: 18, name: 'Drama' }, { id: 35, name: 'Comedia' }],
+    },
+    {
+      id: 1114532,
+      title: 'Chabuca',
+      overview: 'Película biográfica que narra la vida, luchas y trascendencia de Ernesto Pimentel en el espectáculo peruano.',
+      poster_path: '/5d3t7r9s1u2v4w6x8y0z2a4b6c8.jpg',
+      backdrop_path: '/6e4u8s0t2v3w5x7y9z1a3b5c7d9.jpg',
+      vote_average: 7.1,
+      vote_count: 85,
+      release_date: '2024-04-11',
+      origin_country: ['PE'],
+      genres: [{ id: 18, name: 'Drama' }],
+    },
+  ],
+  KR: [
+    {
+      id: 496243,
+      title: 'Parásitos',
+      overview: 'Tanto Gi-taek como su familia están sin trabajo. Cuando su hijo mayor empieza a dar clases en la adinerada casa de los Park, las dos familias entrelazan sus destinos.',
+      poster_path: '/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg',
+      backdrop_path: '/TU9NIjwzjoKPwQHoHshkFcQUCG.jpg',
+      vote_average: 8.5,
+      vote_count: 17500,
+      release_date: '2019-05-30',
+      origin_country: ['KR'],
+      genres: [{ id: 35, name: 'Comedia' }, { id: 53, name: 'Suspenso' }, { id: 18, name: 'Drama' }],
+    },
+    {
+      id: 1125311,
+      title: 'Hope: El primer impacto',
+      overview: 'En el aislado puerto de Hopo, los residentes luchan por sobrevivir ante una inexplicable y aterradora amenaza biológica.',
+      poster_path: '/8p2m3n4o5q6r7s8t9u0v1w2x3y4.jpg',
+      backdrop_path: '/9q3n4o5p6r7s8t9u0v1w2x3y4z5.jpg',
+      vote_average: 6.8,
+      vote_count: 320,
+      release_date: '2026-01-15',
+      origin_country: ['KR'],
+      genres: [{ id: 878, name: 'Ciencia Ficción' }, { id: 53, name: 'Suspenso' }],
+    },
+  ],
+  MX: [
+    {
+      id: 55,
+      title: 'Amores Perros',
+      overview: 'En la Ciudad de México, un fatal accidente automovilístico une trágicamente a tres personas de distintas clases sociales.',
+      poster_path: '/zvhfFkI99W8K0Gf4F3D6f7g8h9.jpg',
+      backdrop_path: '/y7p8q9r0s1t2u3v4w5x6y7z8a9.jpg',
+      vote_average: 8.1,
+      vote_count: 2400,
+      release_date: '2000-06-16',
+      origin_country: ['MX'],
+      genres: [{ id: 18, name: 'Drama' }, { id: 53, name: 'Suspenso' }],
+    },
+  ],
+  ES: [
+    {
+      id: 906126,
+      title: 'La sociedad de la nieve',
+      overview: 'En 1972, el vuelo 571 de la Fuerza Aérea Uruguaya se estrella en el corazón de los Andes. Los sobrevivientes deben recurrir a medidas extremas para sobrevivir.',
+      poster_path: '/2rIpJ5q0H8iF4t7k9Y2z3x4c5v6.jpg',
+      backdrop_path: '/3sJqK6r1I9jG5u8l0Z3a4y5d6w7.jpg',
+      vote_average: 8.0,
+      vote_count: 2800,
+      release_date: '2023-12-13',
+      origin_country: ['ES'],
+      genres: [{ id: 18, name: 'Drama' }],
+    },
+  ],
+};
 
 export const tmdbService = TmdbService.getInstance();

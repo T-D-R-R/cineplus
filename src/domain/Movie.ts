@@ -24,6 +24,7 @@ export class Movie extends BaseEntity {
   public readonly theatricalStatus: TheatricalStatus;
   public readonly peruReleaseDate: string | null;
   public readonly peruCertification: string | null;
+  public readonly originCountry: string | null;
 
   constructor(params: {
     id: number;
@@ -45,6 +46,7 @@ export class Movie extends BaseEntity {
     theatricalStatus?: TheatricalStatus;
     peruReleaseDate?: string | null;
     peruCertification?: string | null;
+    originCountry?: string | null;
     createdAt?: Date | string | null;
   }) {
     super(params.id, params.createdAt);
@@ -66,6 +68,7 @@ export class Movie extends BaseEntity {
     this.theatricalStatus = params.theatricalStatus || 'UNKNOWN';
     this.peruReleaseDate = params.peruReleaseDate || null;
     this.peruCertification = params.peruCertification || null;
+    this.originCountry = params.originCountry || null;
   }
 
   public get numericId(): number {
@@ -195,6 +198,15 @@ export class Movie extends BaseEntity {
       }
     }
 
+    // Determinar país de origen
+    const countryIso =
+      dto.origin_country?.[0] ||
+      dto.production_countries?.[0]?.iso_3166_1 ||
+      null;
+    const originCountry = countryIso
+      ? COUNTRY_NAMES[countryIso.toUpperCase()] || dto.production_countries?.[0]?.name || countryIso
+      : dto.production_countries?.[0]?.name || null;
+
     return new Movie({
       id: dto.id,
       title: dto.title,
@@ -215,7 +227,20 @@ export class Movie extends BaseEntity {
       theatricalStatus: status,
       peruReleaseDate: theatricalInfo?.peruReleaseDate || dto.release_date,
       peruCertification: theatricalInfo?.peruCertification || '14',
+      originCountry,
     });
+  }
+
+  public getCountryDisplayName(): string {
+    return this.originCountry || 'Internacional';
+  }
+
+  public isOutOfTheaters(): boolean {
+    return this.theatricalStatus === 'OUT_OF_THEATERS';
+  }
+
+  public isInTheaters(): boolean {
+    return this.theatricalStatus === 'IN_THEATERS';
   }
 
   public override toJson(): Record<string, unknown> {
@@ -236,7 +261,29 @@ export class Movie extends BaseEntity {
       theatricalStatus: this.theatricalStatus,
       peruReleaseDate: this.peruReleaseDate,
       peruCertification: this.peruCertification,
+      originCountry: this.originCountry,
       createdAt: this.createdAt.toISOString(),
     };
   }
 }
+
+const COUNTRY_NAMES: Record<string, string> = {
+  PE: 'Perú',
+  KR: 'Corea del Sur',
+  US: 'Estados Unidos',
+  ES: 'España',
+  MX: 'México',
+  AR: 'Argentina',
+  JP: 'Japón',
+  FR: 'Francia',
+  IT: 'Italia',
+  GB: 'Reino Unido',
+  CO: 'Colombia',
+  CL: 'Chile',
+  BR: 'Brasil',
+  DE: 'Alemania',
+  CA: 'Canadá',
+  AU: 'Australia',
+  CN: 'China',
+  IN: 'India',
+};

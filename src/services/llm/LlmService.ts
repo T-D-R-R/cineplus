@@ -391,6 +391,13 @@ export class LlmService {
       spLower.includes('veredicto') ||
       spLower.includes('conciliador')
     ) {
+      if (prompt.toLowerCase().includes('streaming') || prompt.toLowerCase().includes('finalizó su temporada') || prompt.toLowerCase().includes('finalizo')) {
+        return (
+          'Tras contrastar los informes narrativo, logístico y técnico, y al haber concluido su ciclo en salas comerciales de Perú, ' +
+          'este comité resuelve que no es necesario adquirir boletos de cine físico. Recomendamos disfrutarla plenamente desde casa ' +
+          'a través de plataformas de streaming o formato digital.'
+        );
+      }
       return (
         'Tras contrastar los informes narrativo, logístico y técnico, y con la certificación unánime del dictamen de auditoría, ' +
         'este comité resuelve que la obra amerita plenamente la compra del boleto. Recomendamos adquirir entradas en horario nocturno ' +
@@ -439,6 +446,12 @@ export class LlmService {
       spLower.includes('cartelera') ||
       spLower.includes('comercial')
     ) {
+      if (prompt.toLowerCase().includes('streaming') || prompt.toLowerCase().includes('finalizó su temporada') || prompt.toLowerCase().includes('finalizo')) {
+        return (
+          'Al haber concluido su temporada en cines de Perú, la película se encuentra disponible en streaming y catálogo digital. ' +
+          'No es necesario pagar entradas de sala (S/. 18 - 26); resulta mucho más conveniente y económico disfrutarla desde casa.'
+        );
+      }
       return (
         'En las salas comerciales de Perú (Huánuco, Huancayo y Lima), el rango de tarifas oscila entre S/. 18.00 y S/. 28.00 ' +
         'para salas estándar y XD. La duración del largometraje y su ambición técnica justifican plenamente la inversión del boleto.'

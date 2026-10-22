@@ -40,6 +40,9 @@ export interface TmdbMovieDto {
   revenue?: number;
   tagline?: string;
   status?: string;
+  origin_country?: string[];
+  production_countries?: Array<{ iso_3166_1: string; name: string }>;
+  original_language?: string;
   credits?: {
     cast: Array<{
       id: number;
