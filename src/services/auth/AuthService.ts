@@ -564,11 +564,15 @@ export class AuthService {
   }
 
   /**
-   * Establece una nueva contraseña tras validar el código OTP.
+   * Establece una nueva contraseña tras validar el código OTP o enlace directo de recuperación.
    */
-  public async resetPassword(email: string, newPassword: string, code: string): Promise<boolean> {
+  public async resetPassword(email: string, newPassword: string, code?: string): Promise<boolean> {
     const cleanEmail = email.trim().toLowerCase();
-    this.verifyOtp(email, code);
+    const isDirectRecovery = code === 'supabase_recovery' || (!code && Boolean(this.currentUser));
+
+    if (!isDirectRecovery && code) {
+      this.verifyOtp(email, code);
+    }
 
     if (!newPassword || newPassword.length < 6) {
       throw new Error('La nueva contraseña debe tener al menos 6 caracteres.');
@@ -580,9 +584,12 @@ export class AuthService {
     const supabase = SupabaseService.getInstance().getClient();
     if (supabase) {
       try {
-        await supabase.auth.updateUser({ password: newPassword });
-      } catch {
-        // Ignorar si no hay sesión activa
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) {
+          console.warn('Error en supabase.auth.updateUser:', error.message);
+        }
+      } catch (err) {
+        console.warn('Error conectando a Supabase updateUser:', err);
       }
     }
 

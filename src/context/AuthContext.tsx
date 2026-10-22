@@ -34,9 +34,11 @@ interface AuthContextType {
     message: string;
   }>;
   verifyOtp: (email: string, code: string) => boolean;
-  resetPassword: (email: string, newPassword: string, code: string) => Promise<boolean>;
+  resetPassword: (email: string, newPassword: string, code?: string) => Promise<boolean>;
   linkTelegramAccount: (userId: string, chatId: string | number, username?: string) => Promise<boolean>;
   checkAndSyncTelegram: () => Promise<{ linked: boolean; message: string }>;
+  isRecoveryMode: boolean;
+  setIsRecoveryMode: (val: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,12 +48,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalDefaultTab, setAuthModalDefaultTab] = useState<'login' | 'register' | 'forgot-password'>('login');
+  const [isRecoveryMode, setIsRecoveryMode] = useState<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = authService.onAuthStateChanged((newUser) => {
       setUser(newUser);
       setLoading(false);
     });
+
+    // Detectar si el usuario llegó desde un enlace de restablecimiento de contraseña de Supabase
+    const checkRecoveryHash = () => {
+      if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+        setIsRecoveryMode(true);
+        setAuthModalDefaultTab('forgot-password');
+        setIsAuthModalOpen(true);
+      }
+    };
+    checkRecoveryHash();
+
     return () => unsubscribe();
   }, []);
 
@@ -104,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return authService.verifyOtp(email, code);
   };
 
-  const resetPassword = async (email: string, newPassword: string, code: string) => {
+  const resetPassword = async (email: string, newPassword: string, code?: string) => {
     return authService.resetPassword(email, newPassword, code);
   };
 
@@ -136,6 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         resetPassword,
         linkTelegramAccount,
         checkAndSyncTelegram,
+        isRecoveryMode,
+        setIsRecoveryMode,
       }}
     >
       {children}

@@ -34,6 +34,8 @@ export function AuthModal() {
     sendOtpViaEmail,
     verifyOtp,
     resetPassword,
+    isRecoveryMode,
+    setIsRecoveryMode,
   } = useAuth();
 
   const [tab, setTab] = useState<'login' | 'register' | 'forgot-password'>(authModalDefaultTab);
@@ -45,7 +47,7 @@ export function AuthModal() {
   const [phone, setPhone] = useState('');
 
   // Estados para Recuperación de Contraseña
-  const [resetStep, setResetStep] = useState<ResetStep>('identify');
+  const [resetStep, setResetStep] = useState<ResetStep>(isRecoveryMode ? 'new-password' : 'identify');
   const [resetIdentifier, setResetIdentifier] = useState('');
   const [resetUserEmail, setResetUserEmail] = useState('');
   const [resetUserName, setResetUserName] = useState('');
@@ -58,7 +60,9 @@ export function AuthModal() {
   // Estados comunes
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(
+    isRecoveryMode ? 'Enlace de correo verificado. Ingresa tu nueva contraseña a continuación.' : null
+  );
 
   // Sincronizar y limpiar campos al abrir el modal
   useEffect(() => {
@@ -72,14 +76,14 @@ export function AuthModal() {
       setResetUserEmail('');
       setResetUserName('');
       setErrorMsg(null);
-      setSuccessMsg(null);
-      setResetStep('identify');
+      setSuccessMsg(isRecoveryMode ? 'Enlace de correo verificado. Ingresa tu nueva contraseña a continuación.' : null);
+      setResetStep(isRecoveryMode ? 'new-password' : 'identify');
       setOtpCode('');
       setNewPassword('');
       setConfirmPassword('');
       setSimulationCodeNotice(null);
     }
-  }, [isAuthModalOpen, authModalDefaultTab]);
+  }, [isAuthModalOpen, authModalDefaultTab, isRecoveryMode]);
 
   if (!isAuthModalOpen) return null;
 
@@ -226,7 +230,15 @@ export function AuthModal() {
         throw new Error('Las contraseñas no coinciden. Por favor verifícalas.');
       }
 
-      await resetPassword(resetUserEmail, newPassword, otpCode);
+      if (isRecoveryMode) {
+        await resetPassword(resetUserEmail || 'recovery', newPassword, 'supabase_recovery');
+        setIsRecoveryMode(false);
+        if (typeof window !== 'undefined' && window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      } else {
+        await resetPassword(resetUserEmail, newPassword, otpCode);
+      }
       setSuccessMsg('¡Contraseña actualizada exitosamente! Ahora puedes iniciar sesión con tu nueva contraseña.');
       setResetStep('success');
     } catch (err: unknown) {

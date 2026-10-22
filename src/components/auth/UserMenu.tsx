@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
-import { LogIn, LogOut, ShieldCheck, ChevronDown, Sparkles, Smartphone, ExternalLink } from 'lucide-react';
+import { LogIn, LogOut, ShieldCheck, ChevronDown, Sparkles, Smartphone, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { telegramService } from '../../services/telegram/TelegramService';
 
 export function UserMenu() {
   const { user, isAuthenticated, openAuthModal, logout, checkAndSyncTelegram } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLinkingTelegram, setIsLinkingTelegram] = useState(false);
+  const [telegramStatusMsg, setTelegramStatusMsg] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pollingRef = useRef<number | null>(null);
 
   // Cerrar al hacer clic fuera
   useEffect(() => {
@@ -16,8 +19,45 @@ export function UserMenu() {
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, []);
+
+  const handleStartTelegramLink = async () => {
+    if (!user) return;
+    setTelegramStatusMsg('Abriendo Telegram...');
+    window.open(telegramService.getDeepLink(`link_${user.id}`), '_blank');
+    setIsLinkingTelegram(true);
+
+    if (pollingRef.current) clearInterval(pollingRef.current);
+
+    let attempts = 0;
+    pollingRef.current = window.setInterval(async () => {
+      attempts++;
+      setTelegramStatusMsg(`Esperando que pulses INICIAR (${30 - attempts * 2}s)...`);
+      try {
+        const res = await checkAndSyncTelegram();
+        if (res.linked) {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          setIsLinkingTelegram(false);
+          setTelegramStatusMsg('¡Cuenta vinculada con éxito!');
+          setTimeout(() => setTelegramStatusMsg(null), 4000);
+          return;
+        }
+      } catch {
+        // Ignorar reintentos
+      }
+
+      if (attempts >= 15) {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        setIsLinkingTelegram(false);
+        setTelegramStatusMsg('Presiona INICIAR en el bot y vuelve a pulsar aquí.');
+        setTimeout(() => setTelegramStatusMsg(null), 5000);
+      }
+    }, 2000);
+  };
 
   if (!isAuthenticated || !user) {
     return (
@@ -104,22 +144,29 @@ export function UserMenu() {
                 <span className="truncate">Telegram: @{user.telegramUsername || 'Conectado'}</span>
               </div>
             ) : (
-              <button
-                onClick={async () => {
-                  window.open(telegramService.getDeepLink(`link_${user.id}`), '_blank');
-                  setTimeout(() => {
-                    checkAndSyncTelegram().catch(() => {});
-                  }, 4000);
-                }}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-sky-500/10 hover:text-sky-200 transition-colors cursor-pointer text-left"
-                title="Vincular con @CinePlusSeguridad_bot para recibir códigos OTP y alertas"
-              >
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-4 h-4 text-sky-400 shrink-0" />
-                  <span>Vincular Telegram</span>
-                </div>
-                <ExternalLink className="w-3.5 h-3.5 text-sky-400/70" />
-              </button>
+              <div className="space-y-1.5">
+                <button
+                  onClick={handleStartTelegramLink}
+                  disabled={isLinkingTelegram}
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-sky-300 hover:bg-sky-500/10 hover:text-sky-200 transition-colors cursor-pointer text-left disabled:opacity-60"
+                  title="Vincular con @CinePlusSeguridad_bot para recibir códigos OTP y alertas"
+                >
+                  <div className="flex items-center gap-2">
+                    {isLinkingTelegram ? (
+                      <RefreshCw className="w-4 h-4 text-sky-400 animate-spin shrink-0" />
+                    ) : (
+                      <Smartphone className="w-4 h-4 text-sky-400 shrink-0" />
+                    )}
+                    <span>{isLinkingTelegram ? 'Comprobando...' : 'Vincular Telegram'}</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-sky-400/70" />
+                </button>
+                {telegramStatusMsg && (
+                  <p className="px-3 text-[10px] text-sky-400/90 font-medium animate-in fade-in">
+                    {telegramStatusMsg}
+                  </p>
+                )}
+              </div>
             )}
 
             <button
