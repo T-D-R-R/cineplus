@@ -1,6 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { X, Send, Bot, Brain, Scale, RefreshCw, ChevronDown, Zap, CheckCircle2, AlertCircle, Film, Star, ExternalLink } from 'lucide-react';
+import {
+  X,
+  Send,
+  Bot,
+  Brain,
+  Scale,
+  RefreshCw,
+  ChevronDown,
+  Zap,
+  CheckCircle2,
+  AlertCircle,
+  Film,
+  Star,
+  ExternalLink,
+  RotateCcw,
+} from 'lucide-react';
 import { LlmService } from '../../services/llm/LlmService';
 import { SentimentClassifier } from '../../services/ml/SentimentClassifier';
 import { REVIEWS_DATASET } from '../../services/ml/data/reviewsDataset';
@@ -10,7 +25,8 @@ import type { Movie } from '../../domain/Movie';
 
 interface AgentOpinion {
   agentName: string;
-  role: 'CRITIC' | 'LOGISTICS';
+  role: 'CRITIC' | 'LOGISTICS' | 'TECHNICAL' | 'AUDITOR';
+  avatar?: string;
   aiProvider: string;
   text: string;
 }
@@ -42,11 +58,58 @@ interface ApiHealthState {
 }
 
 const QUICK_PROMPTS = [
+  '¿Vale la pena ver Dune 2 en sala XD?',
   '¿Cuánto cuesta el cine en Huánuco?',
-  '¿Vale la pena ver Dune 2 en el cine hoy?',
-  '¿Qué películas de terror me recomiendas?',
-  'Recomiéndame una película para ver hoy',
+  '¿Qué opina el comité de La Sustancia?',
+  'Recomiéndame películas de terror o suspenso',
 ];
+
+const INITIAL_WELCOME_MESSAGE: ChatMessage = {
+  id: 'welcome',
+  sender: 'assistant',
+  agentName: 'Dra. Diana Thorne (Presidenta del Comité)',
+  aiProvider: 'Comité de 5 Agentes',
+  text: '¡Hola! Soy la Dra. Diana Thorne, Presidenta del Comité CinePlus AI. Coordino un equipo multidisciplinario de 5 agentes: Valeria Morales (Crítica Narrativa / Gemini), Renzo Carranza (Finanzas y Cartelera / DeepSeek V3), Ing. Mateo Sotomayor (Dirección Técnica / Meta LLaMA 3.3) y la Dra. Beatriz Véliz (Auditoría y Fact-Checking / Qwen 2.5). Pregúntame sobre cualquier película, cartelera en Soles (S/.) o salas de Huánuco y Perú. ¿En qué te podemos asesorar hoy?',
+  timestamp: new Date(),
+};
+
+/**
+ * Renderizador de texto con soporte ligero para negritas y viñetas
+ */
+function renderFormattedMessage(text: string) {
+  const lines = text.split('\n');
+  return lines.map((line, lIdx) => {
+    const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('• ');
+    const cleanLine = isBullet ? line.trim().replace(/^[-•]\s*/, '') : line;
+
+    const parts = cleanLine.split(/(\*\*.*?\*\*)/g);
+    const content = parts.map((part, pIdx) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <strong key={pIdx} className="font-bold text-amber-300">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+
+    if (isBullet) {
+      return (
+        <div key={lIdx} className="flex items-start gap-1.5 my-1 pl-1">
+          <span className="text-amber-400 font-bold shrink-0">•</span>
+          <span className="flex-1">{content}</span>
+        </div>
+      );
+    }
+
+    return (
+      <span key={lIdx} className="block min-h-[1.1em]">
+        {content}
+      </span>
+    );
+  });
+}
 
 const KNOWN_MOVIES = [
   { id: 693134, title: 'Dune: Parte Dos', keywords: ['dune', 'duna', 'arrakis', 'chalamet'] },
@@ -79,16 +142,7 @@ export function CinePlusChatbot() {
   const [billboardMovies, setBillboardMovies] = useState<Movie[]>([]);
   const [healthState, setHealthState] = useState<ApiHealthState | null>(null);
   const [showHealthPanel, setShowHealthPanel] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      agentName: 'Diana Thorne (Comité CinePlus AI)',
-      aiProvider: 'Multi-Agente (Gemini + DeepSeek)',
-      text: '¡Hola! Soy Diana Thorne, moderadora del Comité CinePlus AI. Integro la crítica de Valeria Morales (Google Gemini), el análisis financiero de Renzo Carranza (DeepSeek) y la cartelera oficial en vivo para darte respuestas directas sobre películas, cartelera en Soles (S/.) y salas de Huánuco y Perú. ¿En qué te puedo ayudar hoy?',
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_WELCOME_MESSAGE]);
   const [loading, setLoading] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -136,6 +190,11 @@ export function CinePlusChatbot() {
 
   const toggleDeliberation = (msgId: string) => {
     setExpandedDeliberations((prev) => ({ ...prev, [msgId]: !prev[msgId] }));
+  };
+
+  const handleResetChat = () => {
+    setMessages([INITIAL_WELCOME_MESSAGE]);
+    setExpandedDeliberations({});
   };
 
   // 3. Comprobación instantánea de APIs en vivo
@@ -274,58 +333,125 @@ export function CinePlusChatbot() {
           // Fallback
         }
 
-        // 1. Crítica de Arte (Valeria / Gemini)
-        const criticPrompt = `Pregunta: "${textToSend}". Evalúa el valor cinematográfico de "${matchedMovieData.title}". Géneros: ${matchedMovieData.genres.join(', ')}. El clasificador Naive Bayes reporta ${posPct}% de críticas favorables. Responde en 2 oraciones concisas destacando guion y dirección.`;
-        const criticRes = await llm.generateTextWithMetadata(criticPrompt, {
-          provider: 'gemini',
-          model: 'gemini-3.5-flash-lite',
-          maxTokens: 1200,
-          systemPrompt: 'Eres Valeria Morales, Crítica de Arte de CinePlus con Google Gemini. Analiza guion, estética y valor de autor.',
-        });
+        // Consultar a los 4 especialistas en paralelo (Alta velocidad y robustez)
+        const [criticRes, logisticsRes, technicalRes, auditorRes] = await Promise.all([
+          // 1. Crítica Narrativa (Valeria Morales / Google Gemini)
+          llm.generateTextWithMetadata(
+            `Pregunta del usuario: "${textToSend}". Evalúa el valor cinematográfico, guion y tono de "${matchedMovieData.title}". Géneros: ${matchedMovieData.genres.join(', ')}. Recepción de la comunidad (Naive Bayes ML): ${posPct}% favorable. Responde en 2 oraciones concisas de análisis crítico.`,
+            {
+              provider: 'gemini',
+              model: 'gemini-3.5-flash-lite',
+              maxTokens: 250,
+              systemPrompt: 'Eres Valeria Morales, Crítica Cinematográfica de CinePlus con Google Gemini. Analiza guion, actuaciones y valor de autor sin saludos.',
+            }
+          ),
 
-        // 2. Asesor Comercial (Renzo / DeepSeek)
-        const logisticsPrompt = `Pregunta: "${textToSend}". Analiza los precios y formatos para "${matchedMovieData.title}" (Referencia: ${cinemaInfo}). Responde en 2 oraciones recomendando formato de sala y presupuesto en Soles (S/.).`;
-        const logisticsRes = await llm.generateTextWithMetadata(logisticsPrompt, {
-          provider: 'openrouter',
-          model: 'deepseek/deepseek-chat',
-          maxTokens: 1200,
-          systemPrompt: 'Eres Renzo Carranza, Asesor Comercial con DeepSeek. Sé pragmático con tarifas en Soles (S/.) y salas peruanas.',
-        });
+          // 2. Asesor Comercial (Renzo Carranza / DeepSeek V3)
+          llm.generateTextWithMetadata(
+            `Pregunta del usuario: "${textToSend}". Analiza los costos y conveniencia para "${matchedMovieData.title}" en cines de Perú (Referencia: ${cinemaInfo}). Responde en 2 oraciones recomendando formato de sala (2D o XD) y presupuesto en Soles (S/.).`,
+            {
+              provider: 'openrouter',
+              model: 'deepseek/deepseek-chat',
+              maxTokens: 250,
+              systemPrompt: 'Eres Renzo Carranza, Asesor Comercial de CinePlus con DeepSeek V3. Sé pragmático con tarifas en Soles (S/.) y salas peruanas sin saludos.',
+            }
+          ),
 
-        // 3. Veredicto Final (Diana Thorne)
+          // 3. Consultor Técnico & Audiovisual (Ing. Mateo Sotomayor / Meta LLaMA 3.3)
+          llm.generateTextWithMetadata(
+            `Pregunta del usuario: "${textToSend}". Evalúa el despliegue técnico de "${matchedMovieData.title}" (Géneros: ${matchedMovieData.genres.join(', ')}). Responde en 2 oraciones sobre la cinematografía, efectos visuales y si amerita sala con pantalla envolvente XD y sonido multicanal en Perú.`,
+            {
+              provider: 'openrouter',
+              model: 'meta-llama/llama-3.3-70b-instruct',
+              maxTokens: 250,
+              systemPrompt: 'Eres el Ing. Mateo Sotomayor, Consultor Técnico con Meta LLaMA 3.3. Evalúa fotografía, efectos visuales y sonido envolvente en salas sin saludos.',
+            }
+          ),
+
+          // 4. Auditora de Calidad & Fact-Checking (Dra. Beatriz Véliz / Qwen 2.5)
+          llm.generateTextWithMetadata(
+            `Pregunta del usuario: "${textToSend}". Audita y calibra constructivamente la evaluación de "${matchedMovieData.title}". Responde en 2 oraciones certificando la consistencia con TMDb y confirmando la disponibilidad de salas y formatos accesibles en la cartelera peruana.`,
+            {
+              provider: 'openrouter',
+              model: 'qwen/qwen-2.5-72b-instruct',
+              maxTokens: 250,
+              systemPrompt: 'Eres la Dra. Beatriz Véliz, Auditora de Calidad con Qwen 2.5. Calibra constructivamente y certifica la consistencia para la cartelera en Perú sin saludos.',
+            }
+          ),
+        ]);
+
+        // 5. Orquestadora y Presidenta (Dra. Diana Thorne / Gemini Core)
         const conciergePrompt =
-          `El usuario preguntó: "${textToSend}".\n` +
-          `Perspectiva de la Crítica (Valeria / Gemini): "${criticRes.text}"\n` +
-          `Perspectiva Comercial (Renzo / DeepSeek): "${logisticsRes.text}"\n` +
-          `Afinidad de la comunidad (Naive Bayes ML): ${posPct}% favorable.\n` +
-          `Tu tarea: Redacta UNA SOLA respuesta unificada para el usuario en 1 o 2 párrafos concisos, integrando la recomendación cinematográfica y los datos prácticos de precios/salas en Soles.`;
+          `El usuario preguntó: "${textToSend}" sobre "${matchedMovieData.title}".\n` +
+          `1. Crítica Narrativa (Valeria / Gemini): "${criticRes.text}"\n` +
+          `2. Asesoría Comercial (Renzo / DeepSeek V3): "${logisticsRes.text}"\n` +
+          `3. Dirección Técnica (Mateo / Meta LLaMA 3.3): "${technicalRes.text}"\n` +
+          `4. Certificación de Auditoría (Beatriz / Qwen 2.5): "${auditorRes.text}"\n` +
+          `Afinidad de audiencia (Naive Bayes ML): ${posPct}% favorable.\n\n` +
+          `Tu tarea como Presidenta del Comité CinePlus: Redacta UNA SOLA respuesta ejecutiva y concluyente para el espectador en 1 o 2 párrafos concisos. Integra los aspectos artísticos, la recomendación de sala y los precios en Soles (S/.), dictando si le conviene verla hoy.`;
 
         const conciergeRes = await llm.generateTextWithMetadata(conciergePrompt, {
           provider: 'gemini',
           model: 'gemini-3.5-flash-lite',
-          maxTokens: 1200,
+          maxTokens: 450,
           systemPrompt:
-            'Eres Diana Thorne, Moderadora de CinePlus. Sintetiza las opiniones de tu equipo en una sola respuesta elegante, concluyente y útil para el espectador.',
+            'Eres la Dra. Diana Thorne, Presidenta del Comité de CinePlus AI. Sintetiza las posturas de los 4 especialistas en un dictamen unificado, elegante y resolutivo.',
         });
+
+        // Buscar si tenemos tarjeta de la película consultada
+        const targetMovieInBillboard = billboardMovies.find(
+          (m) =>
+            Number(m.id) === matchedMovieData!.id ||
+            m.title.toLowerCase().includes(matchedMovieData!.title.toLowerCase())
+        );
+
+        const movieCard: RecommendedMovieCard[] = targetMovieInBillboard
+          ? [
+              {
+                id: Number(targetMovieInBillboard.id),
+                title: targetMovieInBillboard.title,
+                posterPath: targetMovieInBillboard.posterPath,
+                voteAverage: targetMovieInBillboard.voteAverage,
+                genres: targetMovieInBillboard.genres.map((g) => g.name),
+              },
+            ]
+          : [];
 
         const assistantMsg: ChatMessage = {
           id: `resp_${Date.now()}`,
           sender: 'assistant',
-          agentName: 'Diana Thorne (Veredicto del Comité)',
-          aiProvider: conciergeRes.providerUsed,
+          agentName: 'Dra. Diana Thorne (Resolución del Comité)',
+          aiProvider: 'Comité de 5 Agentes',
           text: conciergeRes.text,
+          recommendedMovies: movieCard.length > 0 ? movieCard : undefined,
           deliberation: [
             {
-              agentName: 'Valeria Morales (Crítica de Arte)',
+              agentName: 'Valeria Morales (Crítica Narrativa)',
               role: 'CRITIC',
+              avatar: '🎬',
               aiProvider: criticRes.providerUsed,
               text: criticRes.text,
             },
             {
-              agentName: 'Renzo Carranza (Comercial y Cines)',
+              agentName: 'Renzo Carranza (Finanzas y Cartelera)',
               role: 'LOGISTICS',
+              avatar: '🎟️',
               aiProvider: logisticsRes.providerUsed,
               text: logisticsRes.text,
+            },
+            {
+              agentName: 'Ing. Mateo Sotomayor (Dirección Técnica & VFX)',
+              role: 'TECHNICAL',
+              avatar: '🔊',
+              aiProvider: technicalRes.providerUsed,
+              text: technicalRes.text,
+            },
+            {
+              agentName: 'Dra. Beatriz Véliz (Auditora de Calidad)',
+              role: 'AUDITOR',
+              avatar: '🛡️',
+              aiProvider: auditorRes.providerUsed,
+              text: auditorRes.text,
             },
           ],
           timestamp: new Date(),
@@ -464,11 +590,11 @@ export function CinePlusChatbot() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-full bg-gradient-to-r from-indigo-600 via-purple-600 to-amber-500 hover:from-indigo-500 hover:to-amber-400 text-white shadow-xl shadow-indigo-950/60 transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20"
-        title="Abrir Chatbot Multi-Agente CinePlus"
+        title="Abrir Comité de 5 Agentes"
       >
         <Bot className="w-6 h-6 animate-pulse" />
         <span className="hidden sm:inline text-xs font-black tracking-wider uppercase">
-          {isOpen ? 'Cerrar Chat AI' : 'Comité AI Multi-Agente'}
+          {isOpen ? 'Cerrar Comité' : 'Comité de 5 Agentes'}
         </span>
         <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
       </button>
@@ -484,18 +610,28 @@ export function CinePlusChatbot() {
               </div>
               <div>
                 <h3 className="text-sm font-black text-white flex items-center gap-2">
-                  Chatbot Multi-Agente CinePlus
+                  Comité de 5 Agentes
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
                     Live
                   </span>
                 </h3>
                 <p className="text-[11px] text-slate-400">
-                  Gemini + DeepSeek + TMDb ({billboardMovies.length > 0 ? `${billboardMovies.length} pelis` : 'Cargando...'})
+                  Deliberación en tiempo real (Gemini, DeepSeek, LLaMA, Qwen) + TMDb
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5">
+              {/* Botón de Limpiar / Reiniciar Chat */}
+              <button
+                onClick={handleResetChat}
+                title="Reiniciar chat y limpiar historial"
+                className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700/80 text-slate-300 hover:text-white text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                <span className="hidden sm:inline">Limpiar</span>
+              </button>
+
               {/* Botón de Diagnóstico de APIs */}
               <button
                 onClick={handleCheckHealth}
@@ -503,7 +639,11 @@ export function CinePlusChatbot() {
                 title="Comprobar estado en vivo de las APIs de IA y TMDb"
                 className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-indigo-900/60 border border-slate-700/80 text-slate-300 hover:text-white text-[11px] font-medium flex items-center gap-1 transition-colors cursor-pointer"
               >
-                <Zap className={`w-3.5 h-3.5 ${healthState?.testing ? 'text-amber-400 animate-spin' : 'text-emerald-400'}`} />
+                <Zap
+                  className={`w-3.5 h-3.5 ${
+                    healthState?.testing ? 'text-amber-400 animate-spin' : 'text-emerald-400'
+                  }`}
+                />
                 <span className="hidden sm:inline">Probar APIs</span>
               </button>
 
@@ -533,8 +673,14 @@ export function CinePlusChatbot() {
                     <AlertCircle className="w-3 h-3 text-amber-400" />
                   )}
                   Gemini:{' '}
-                  <strong className={healthState?.gemini?.online ? 'text-emerald-400' : 'text-slate-400'}>
-                    {healthState?.testing ? 'Probando...' : healthState?.gemini?.online ? `${healthState.gemini.latencyMs}ms` : 'En espera'}
+                  <strong
+                    className={healthState?.gemini?.online ? 'text-emerald-400' : 'text-slate-400'}
+                  >
+                    {healthState?.testing
+                      ? 'Probando...'
+                      : healthState?.gemini?.online
+                      ? `${healthState.gemini.latencyMs}ms`
+                      : 'En espera'}
                   </strong>
                 </span>
                 <span className="font-bold text-slate-300 flex items-center gap-1">
@@ -545,9 +691,15 @@ export function CinePlusChatbot() {
                   ) : (
                     <AlertCircle className="w-3 h-3 text-amber-400" />
                   )}
-                  DeepSeek:{' '}
-                  <strong className={healthState?.openrouter?.online ? 'text-emerald-400' : 'text-slate-400'}>
-                    {healthState?.testing ? 'Probando...' : healthState?.openrouter?.online ? `${healthState.openrouter.latencyMs}ms` : 'En espera'}
+                  OpenRouter (DeepSeek/LLaMA/Qwen):{' '}
+                  <strong
+                    className={healthState?.openrouter?.online ? 'text-emerald-400' : 'text-slate-400'}
+                  >
+                    {healthState?.testing
+                      ? 'Probando...'
+                      : healthState?.openrouter?.online
+                      ? `${healthState.openrouter.latencyMs}ms`
+                      : 'En espera'}
                   </strong>
                 </span>
               </div>
@@ -589,14 +741,14 @@ export function CinePlusChatbot() {
                       : 'glass-panel bg-slate-900/90 border border-slate-700 text-slate-100 rounded-tl-sm shadow-md'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                  <div className="leading-relaxed">{renderFormattedMessage(msg.text)}</div>
 
                   {/* Mini-Tarjetas de Películas Recomendadas de TMDb */}
                   {msg.recommendedMovies && msg.recommendedMovies.length > 0 && (
                     <div className="mt-3 pt-2.5 border-t border-slate-800 space-y-2">
                       <div className="flex items-center gap-1.5 text-[10px] font-bold text-amber-400">
                         <Film className="w-3.5 h-3.5" />
-                        <span>Películas analizadas en TMDb para tu consulta:</span>
+                        <span>Película analizada en TMDb para tu consulta:</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         {msg.recommendedMovies.map((m) => (
@@ -623,7 +775,8 @@ export function CinePlusChatbot() {
                               </h4>
                               <div className="flex items-center gap-1 text-[9px] text-slate-400">
                                 <span className="text-amber-400 font-semibold flex items-center gap-0.5">
-                                  <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" /> {m.voteAverage.toFixed(1)}
+                                  <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />{' '}
+                                  {m.voteAverage.toFixed(1)}
                                 </span>
                                 <span>•</span>
                                 <span className="truncate">{m.genres[0] || 'Cine'}</span>
@@ -635,7 +788,7 @@ export function CinePlusChatbot() {
                     </div>
                   )}
 
-                  {/* Panel Acordeón de Deliberación Multi-Agente */}
+                  {/* Panel Acordeón de Deliberación de los 5 Agentes */}
                   {msg.deliberation && msg.deliberation.length > 0 && (
                     <div className="mt-3 pt-2.5 border-t border-slate-800">
                       <button
@@ -645,8 +798,8 @@ export function CinePlusChatbot() {
                         <Brain className="w-3.5 h-3.5" />
                         <span>
                           {expandedDeliberations[msg.id]
-                            ? 'Ocultar deliberación interna'
-                            : 'Ver deliberación del comité (Gemini + DeepSeek)'}
+                            ? 'Ocultar deliberación del Comité'
+                            : 'Ver deliberación del Comité (5 Agentes)'}
                         </span>
                         <ChevronDown
                           className={`w-3.5 h-3.5 transition-transform duration-200 ${
@@ -657,24 +810,36 @@ export function CinePlusChatbot() {
 
                       {expandedDeliberations[msg.id] && (
                         <div className="mt-2.5 space-y-2 animate-in fade-in-50 duration-200">
-                          {msg.deliberation.map((op, idx) => (
-                            <div
-                              key={idx}
-                              className={`p-2.5 rounded-xl border text-[11px] leading-relaxed ${
-                                op.role === 'CRITIC'
-                                  ? 'bg-indigo-950/40 border-indigo-500/30 text-indigo-200'
-                                  : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-200'
-                              }`}
-                            >
-                              <div className="flex items-center justify-between mb-1 text-[10px] font-bold">
-                                <span>{op.agentName}</span>
-                                <span className="opacity-75 font-normal px-1 py-0.2 rounded bg-slate-900 border border-slate-800">
-                                  {op.aiProvider}
-                                </span>
+                          {msg.deliberation.map((op, idx) => {
+                            let roleColor = 'bg-slate-900 border-slate-700 text-slate-200';
+                            if (op.role === 'CRITIC') {
+                              roleColor = 'bg-indigo-950/40 border-indigo-500/30 text-indigo-200';
+                            } else if (op.role === 'LOGISTICS') {
+                              roleColor = 'bg-emerald-950/40 border-emerald-500/30 text-emerald-200';
+                            } else if (op.role === 'TECHNICAL') {
+                              roleColor = 'bg-purple-950/40 border-purple-500/30 text-purple-200';
+                            } else if (op.role === 'AUDITOR') {
+                              roleColor = 'bg-amber-950/40 border-amber-500/30 text-amber-200';
+                            }
+
+                            return (
+                              <div
+                                key={idx}
+                                className={`p-2.5 rounded-xl border text-[11px] leading-relaxed ${roleColor}`}
+                              >
+                                <div className="flex items-center justify-between mb-1 text-[10px] font-bold">
+                                  <span className="flex items-center gap-1.5">
+                                    <span>{op.avatar || '🤖'}</span>
+                                    <span>{op.agentName}</span>
+                                  </span>
+                                  <span className="opacity-80 font-normal px-1.5 py-0.5 rounded bg-slate-950/80 border border-slate-800 text-[9px] text-white">
+                                    {op.aiProvider}
+                                  </span>
+                                </div>
+                                <p className="opacity-95">{op.text}</p>
                               </div>
-                              <p className="opacity-90">{op.text}</p>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -684,9 +849,9 @@ export function CinePlusChatbot() {
             ))}
 
             {loading && (
-              <div className="flex items-center gap-2 p-3 rounded-2xl glass-panel text-indigo-400 text-xs animate-pulse max-w-xs">
+              <div className="flex items-center gap-2 p-3 rounded-2xl glass-panel text-indigo-400 text-xs animate-pulse max-w-sm">
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Los 3 agentes están analizando tu consulta...</span>
+                <span>El Comité de 5 Agentes está deliberando en tiempo real...</span>
               </div>
             )}
 
