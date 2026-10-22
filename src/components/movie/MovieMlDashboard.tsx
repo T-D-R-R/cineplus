@@ -35,7 +35,7 @@ interface InjectedReviewItem {
   isSimulated: boolean;
 }
 
-// Reseñas sintéticas para pruebas rápidas del docente
+// Reseñas sintéticas para pruebas rápidas y benchmarking del administrador / docente
 const DEMO_PRESET_REVIEWS = {
   positive: [
     { userName: 'Critico_Cinematografico', comment: 'Una dirección deslumbrante, fotografía impecable y un ritmo que te atrapa de principio a fin.', rating: 5, sentiment: 'positivo' },
@@ -43,6 +43,23 @@ const DEMO_PRESET_REVIEWS = {
     { userName: 'Marcos_Vanguardia', comment: 'Actuaciones sublimes que transmiten emoción pura. De lo mejor del año sin ninguna duda.', rating: 5, sentiment: 'positivo' },
     { userName: 'Sofia_Cinefila', comment: 'Guion ingenioso, diálogos bien pulidos y un desenlace épico y sumamente conmovedor.', rating: 5, sentiment: 'positivo' },
     { userName: 'Roberto_Analista', comment: 'Una cátedra de narrativa visual. Cada plano está cuidadosamente estructurado con gran maestría.', rating: 5, sentiment: 'positivo' },
+    { userName: 'Elena_Espectadora', comment: 'Inolvidable experiencia. El desarrollo de personajes es brillante, emotivo y auténtico.', rating: 5, sentiment: 'positivo' },
+    { userName: 'Daniel_Estrenos', comment: 'Una joya absoluta con actuaciones memorables y una banda sonora perfecta.', rating: 5, sentiment: 'positivo' },
+    { userName: 'Patricia_Arte', comment: 'Impresionante manejo del color y la tensión dramática. Cine de autor en su máxima expresión.', rating: 5, sentiment: 'positivo' },
+    { userName: 'Lucas_Cineplus', comment: 'Sales de la sala totalmente conmovido e impactado por el poder del mensaje.', rating: 5, sentiment: 'positivo' },
+    { userName: 'Camila_Filmica', comment: 'Grandiosa de principio a fin. Justifica con creces cada minuto de su duración.', rating: 5, sentiment: 'positivo' },
+  ],
+  neutral: [
+    { userName: 'Observador_Cine', comment: 'Tiene momentos entretenidos y secuencias logradas, pero el mensaje de fondo queda algo difuso.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Guionista_Independiente', comment: 'Plantea ideas estimulantes en el papel, pero tropieza en su ejecución con un ritmo irregular.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Fan_Del_Genero', comment: 'Cumple como entretenimiento de fin de semana con palomitas, sin ser la obra maestra que muchos prometen.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Critico_Moderado', comment: 'Visualmente correcta y con buen reparto, aunque el guion abusa de fórmulas y clichés ya conocidos.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Espectador_Balanceado', comment: 'Ni tan mala como dicen sus detractores, ni tan brillante como afirman sus defensores. Es una película promedio.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Andres_Analitico', comment: 'Tiene altibajos notables: la primera mitad atrapa, pero el clímax se siente algo apresurado.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Mariana_Fila5', comment: 'Una producción pasable que no arriesga demasiado y se mantiene en terreno seguro.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Cinefilo_Indeciso', comment: 'Deja sensaciones encontradas: muy buena en apartados técnicos pero floja en emoción y empatía.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Hugo_Critico', comment: 'Entretiene a secas. Adecuada para una tarde de domingo sin demasiadas expectativas.', rating: 3, sentiment: 'neutral' },
+    { userName: 'Valeria_Neutral', comment: 'Aspectos técnicos rescatables frente a un desenlace predecible que no sorprende.', rating: 3, sentiment: 'neutral' },
   ],
   negative: [
     { userName: 'Espectador_Decepcionado', comment: 'Una trama pretenciosa y sumamente lenta que no logra conectar con el espectador en ningún momento.', rating: 1, sentiment: 'negativo' },
@@ -50,14 +67,11 @@ const DEMO_PRESET_REVIEWS = {
     { userName: 'Lucia_Aburrida', comment: 'Pésimo ritmo narrativo. La primera hora es completamente prescindible y el final es incoherente.', rating: 1, sentiment: 'negativo' },
     { userName: 'Carlos_Disconforme', comment: 'Efectos visuales mediocres y abuso de pantalla verde que arruinan cualquier intento de inmersión.', rating: 2, sentiment: 'negativo' },
     { userName: 'Valeria_Escéptica', comment: 'Una oportunidad desperdiciada con un guion simplón y resoluciones totalmente inverosímiles.', rating: 1, sentiment: 'negativo' },
-  ],
-  varied: [
-    { userName: 'Critico_Tecnico', comment: 'Sobresaliente en el apartado técnico y la iluminación de claroscuros, aunque la narrativa pierde algo de fuerza.', rating: 4, sentiment: 'positivo' },
-    { userName: 'Observador_Cine', comment: 'Tiene momentos entretenidos y secuencias de acción logradas, pero el mensaje de fondo queda difuso.', rating: 3, sentiment: 'neutral' },
-    { userName: 'Guionista_Independiente', comment: 'Plantea ideas filosóficas estimulantes pero tropieza al intentar complacer a todo el público.', rating: 3, sentiment: 'neutral' },
-    { userName: 'Fan_Del_Genero', comment: 'Cumple como entretenimiento de fin de semana con palomitas, sin ser la obra maestra que muchos prometen.', rating: 3, sentiment: 'neutral' },
-    { userName: 'Analista_Cinematografico', comment: 'Un experimento audiovisual valiente con actuaciones memorables que compensan los baches del segundo acto.', rating: 4, sentiment: 'positivo' },
-    { userName: 'Espectador_Casual', comment: 'La banda sonora es buena pero se hace algo pesada y larga en su tramo central.', rating: 2, sentiment: 'negativo' },
+    { userName: 'Javier_Desencanto', comment: 'Aburrida y monótona. No genera empatía con ningún personaje y se hace larguísima.', rating: 1, sentiment: 'negativo' },
+    { userName: 'Raul_Exigente', comment: 'Guion flojo repleto de huecos argumentales que arruinan por completo la premisa.', rating: 2, sentiment: 'negativo' },
+    { userName: 'Sonia_Desilusionada', comment: 'Una decepción total. El tráiler prometía algo innovador que la película nunca entrega.', rating: 1, sentiment: 'negativo' },
+    { userName: 'Gabriel_CeroPuntos', comment: 'Pésimas decisiones de dirección y un montaje caótico que desorienta.', rating: 1, sentiment: 'negativo' },
+    { userName: 'Monica_Critica', comment: 'Completamente olvidable. No aporta nada nuevo y desperdicia a sus actores.', rating: 2, sentiment: 'negativo' },
   ],
 };
 
@@ -69,6 +83,7 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
   // Reseñas adicionales inyectadas temporalmente en memoria (para pruebas del docente)
   // IMPORTANTE: Se guardan ÚNICAMENTE en estado React (memoria RAM), NUNCA en Supabase
   const [injectedReviews, setInjectedReviews] = useState<InjectedReviewItem[]>([]);
+  const [injectCount, setInjectCount] = useState<number>(5);
 
   // Estado del análisis de Machine Learning
   const [analysis, setAnalysis] = useState<MovieMlAnalysisResult | null>(null);
@@ -147,13 +162,19 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
     }, 850);
   };
 
-  // Inyectar reseñas sintéticas (Herramienta aislada en memoria para el Docente)
-  const handleInjectReviews = (type: 'positive' | 'negative' | 'varied') => {
-    const toAdd: InjectedReviewItem[] = DEMO_PRESET_REVIEWS[type].map((r, i) => ({
-      ...r,
-      id: `sim-${Date.now()}-${i}`,
-      isSimulated: true,
-    }));
+  // Inyectar reseñas sintéticas (Herramienta aislada en memoria para el Docente / Administrador)
+  const handleInjectReviews = (type: 'positive' | 'neutral' | 'negative') => {
+    const pool = DEMO_PRESET_REVIEWS[type];
+    const toAdd: InjectedReviewItem[] = [];
+    for (let i = 0; i < injectCount; i++) {
+      const template = pool[i % pool.length];
+      toAdd.push({
+        ...template,
+        id: `sim-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+        userName: `${template.userName}_${Math.floor(Math.random() * 900 + 100)}`,
+        isSimulated: true,
+      });
+    }
     const updated = [...toAdd, ...injectedReviews];
     setInjectedReviews(updated);
     runMovieEvaluation(updated);
@@ -443,29 +464,52 @@ export function MovieMlDashboard({ movieId, movieTitle, reviews }: MovieMlDashbo
               </p>
             </div>
 
-            {/* Botones de Inyección Rápida para Evaluación */}
+            {/* Control de Cantidad y Botones de Inyección Rápida para Evaluación */}
             <div className="space-y-2">
+              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                <span className="font-semibold text-slate-300">Cantidad a inyectar:</span>
+                <div className="inline-flex rounded-lg bg-slate-900/80 p-0.5 border border-slate-800">
+                  {[1, 3, 5, 10].map((qty) => (
+                    <button
+                      key={qty}
+                      type="button"
+                      onClick={() => setInjectCount(qty)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                        injectCount === qty
+                          ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                          : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      +{qty}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-1.5 text-[11px] font-bold">
                 <button
+                  type="button"
                   onClick={() => handleInjectReviews('positive')}
                   className="px-2 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-colors text-center"
-                  title="Inyecta 5 críticas sumamente positivas en memoria"
+                  title={`Inyecta ${injectCount} críticas sumamente positivas en memoria`}
                 >
-                  +5 Positivas
+                  +{injectCount} Positivas
                 </button>
                 <button
-                  onClick={() => handleInjectReviews('varied')}
+                  type="button"
+                  onClick={() => handleInjectReviews('neutral')}
                   className="px-2 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors text-center"
-                  title="Inyecta 6 críticas mixtas en memoria para retar a SVM y k-NN"
+                  title={`Inyecta ${injectCount} críticas neutrales (3 estrellas) en memoria para retar a SVM y k-NN`}
                 >
-                  +6 Variadas
+                  +{injectCount} Neutrales
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleInjectReviews('negative')}
                   className="px-2 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition-colors text-center"
-                  title="Inyecta 5 críticas negativas en memoria"
+                  title={`Inyecta ${injectCount} críticas negativas en memoria`}
                 >
-                  +5 Negativas
+                  +{injectCount} Negativas
                 </button>
               </div>
 

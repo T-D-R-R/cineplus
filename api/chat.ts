@@ -6,6 +6,7 @@
 
 interface ChatRequestBody {
   prompt?: string;
+  userQuery?: string;
   action?: 'health';
   systemPrompt?: string;
   provider?: 'gemini' | 'openrouter' | 'deepseek' | 'grok' | 'auto';
@@ -348,33 +349,55 @@ export default async function handler(req: any, res: any) {
 
   // 3. Fallback Heurístico Contextual del Servidor (Cero caídas en sustentación)
   const spLower = systemPrompt.toLowerCase();
-  const pLower = prompt.toLowerCase();
+  
+  // Extraer la consulta real del usuario (evita falsos positivos con palabras de seguridad dentro de las instrucciones)
+  const extractedUserQuery =
+    (typeof body.userQuery === 'string' && body.userQuery.trim()) ||
+    prompt.match(/Consulta del usuario en CinePlus:\s*"([^"]+)"/i)?.[1] ||
+    prompt.match(/El usuario preguntó:\s*"([^"]+)"/i)?.[1] ||
+    prompt.match(/Pregunta del usuario:\s*"([^"]+)"/i)?.[1] ||
+    '';
+  const uqLower = (extractedUserQuery || prompt).toLowerCase();
   let fallbackText = '';
 
-  const isRecommendation =
-    pLower.includes('recomienda') ||
-    pLower.includes('recomiéndame') ||
-    pLower.includes('sugiere') ||
-    pLower.includes('qué ver') ||
-    pLower.includes('que ver') ||
-    pLower.includes('película para ver') ||
-    pLower.includes('pelicula para ver');
-
   const isOffTopic =
-    pLower.includes('medicina') ||
-    pLower.includes('médico') ||
-    pLower.includes('salud') ||
-    pLower.includes('receta') ||
-    pLower.includes('politica') ||
-    pLower.includes('política') ||
-    pLower.includes('leyes');
+    uqLower.includes('medicina') ||
+    uqLower.includes('médico') ||
+    uqLower.includes('medico') ||
+    uqLower.includes('salud') ||
+    uqLower.includes('receta') ||
+    uqLower.includes('politica') ||
+    uqLower.includes('política') ||
+    uqLower.includes('leyes') ||
+    uqLower.includes('abogado') ||
+    uqLower.includes('enfermedad') ||
+    uqLower.includes('matematica') ||
+    uqLower.includes('matemática');
+
+  const isRecommendation =
+    uqLower.includes('recomienda') ||
+    uqLower.includes('recomiéndame') ||
+    uqLower.includes('sugiere') ||
+    uqLower.includes('qué ver') ||
+    uqLower.includes('que ver') ||
+    uqLower.includes('película para ver') ||
+    uqLower.includes('pelicula para ver') ||
+    uqLower.includes('peliculas') ||
+    uqLower.includes('películas');
 
   if (isOffTopic) {
     fallbackText =
       '¡Hola! Como moderadora del Comité CinePlus, mi labor está enfocada exclusivamente en el análisis cinematográfico, cartelera en Soles y salas en Perú. No estoy facultada para emitir opiniones sobre salud, medicina ni disciplinas externas. Te invito a consultarme sobre películas de estreno, directores o funciones de cine. ¿Qué película te gustaría explorar hoy?';
   } else if (isRecommendation) {
-    fallbackText =
-      '¡Por supuesto! Para hoy en CinePlus te recomiendo dos grandes alternativas de la cartelera: si buscas suspenso psicológico e impacto visual, "La Sustancia" es el estreno más aclamado y comentado del momento; y si prefieres una épica de ciencia ficción, "Dune: Parte Dos" en sala XD de Cineplanet te brindará una inmersión audiovisual espectacular. ¿Qué género prefieres hoy?';
+    // Si en el prompt vienen títulos oficiales de TMDb descubiertos, citarlos en la recomendación
+    const tmdbTitles = Array.from(prompt.matchAll(/- "([^"]+)"/g)).map((m) => m[1]);
+    if (tmdbTitles.length >= 2) {
+      fallbackText =
+        `¡Por supuesto! Analizando nuestro catálogo verificado de TMDb, te recomiendo especialmente "**${tmdbTitles[0]}**" y "**${tmdbTitles[1]}**". Ambas cuentan con excelentes propuestas narrativas y visuales destacadas para disfrutar hoy. Puedes revisar sus fichas interactivas adjuntas abajo para conocer sinopsis y calificaciones. ¿Qué película te llama más la atención?`;
+    } else {
+      fallbackText =
+        '¡Por supuesto! Para hoy en CinePlus te recomiendo dos grandes alternativas: si buscas suspenso e impacto de autor, "**La Sustancia**" es una propuesta audaz e intensa; y si prefieres una épica de ciencia ficción espectacular, "**Dune: Parte Dos**" te brindará una inmersión audiovisual inolvidable. ¿Qué género o país te gustaría explorar hoy?';
+    }
   } else if (spLower.includes('moderador') || spLower.includes('veredicto') || spLower.includes('conciliador')) {
     fallbackText =
       'Tras contrastar la evaluación cinematográfica y la viabilidad económica en salas peruanas, ' +

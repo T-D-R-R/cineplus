@@ -364,6 +364,7 @@ export function CinePlusChatbot() {
           provider: 'openrouter',
           model: 'deepseek/deepseek-chat',
           maxTokens: 1200,
+          userQuery: textToSend,
           systemPrompt:
             'Eres Diana Thorne, asesora y moderadora principal de CinePlus en Perú. Responde directamente la duda del usuario con precisión comercial y calidez.',
         });
@@ -475,6 +476,7 @@ export function CinePlusChatbot() {
           provider: 'gemini',
           model: 'gemini-3.5-flash-lite',
           maxTokens: 450,
+          userQuery: textToSend,
           systemPrompt:
             'Eres la Dra. Diana Thorne, Presidenta del Comité de CinePlus AI. Sintetiza las posturas de los 4 especialistas en un dictamen unificado, elegante y resolutivo.',
         });
@@ -646,24 +648,25 @@ export function CinePlusChatbot() {
       const generalPrompt =
         `Consulta del usuario en CinePlus: "${textToSend}"\n\n` +
         promptContext +
-        `\nCines de referencia en Perú: Cineplanet Real Plaza (Huánuco, Huancayo, Lima - S/. 18.00 a 26.00) y Cinemark (S/. 16.00 a 22.00).\n\n` +
-        `DIRECTRIZ ESTRICTA DE SEGURIDAD Y RESTRICCIÓN DE DOMINIO (GUARDRAIL):\n` +
+        `\nDIRECTRIZ DE SEGURIDAD, RESTRICCIÓN DE DOMINIO Y VERACIDAD DE CARTELERA:\n` +
         `Eres Diana Thorne, moderadora del Comité CinePlus AI (plataforma de cartelera y películas en Perú).\n` +
-        `- Si la pregunta es sobre medicina, salud, política, recetas, matemáticas o temas externos:\n` +
-        `  Rechaza amablemente la consulta con cordialidad, indicando que como IA de CinePlus tu especialidad se circunscribe estrictamente al cine y la cartelera peruana. Invita al usuario a consultar sobre películas.\n` +
-        `- DIRECTRIZ ESTRICTA DE NACIONALIDADES Y PAÍSES DE ORIGEN:\n` +
-        `  Cada película listada tiene su país de origen oficial (ejemplo: "Hope: El primer impacto" es de Corea del Sur, "Matchbox" es de Estados Unidos, etc.).\n` +
-        `  NUNCA llames "talento nacional" o "cine peruano" a producciones de Corea del Sur, EE.UU. u otros países extranjeros.\n` +
-        `  Si el usuario pregunta por películas de un país específico (ej: Perú, Corea, México, España, etc.), limítate estricta y exclusivamente a obras de ese país.\n` +
-        `- Si la pregunta solicita recomendaciones:\n` +
-        `  Analiza las películas proporcionadas de TMDb y recomienda 2 o 3 opciones destacadas. Coloca sus títulos exactos en **negrita**, menciona por qué verlas (actuaciones, atmósfera o impacto) e indica si están en cartelera o en catálogo. Menciona precios en Soles.\n` +
-        `- Si la pregunta sí está relacionada con cine en general:\n` +
-        `  Responde con calidez y criterio cinematográfico en 1 solo mensaje completo y conciso.`;
+        `- RESTRICCIÓN DE DOMINIO:\n` +
+        `  Si la consulta del usuario trata sobre medicina, salud, recetas, política, leyes, matemáticas o tareas no cinematográficas:\n` +
+        `  Declina con gran calidez y cortesía, explicando que como IA de CinePlus tu conocimiento se circunscribe exclusivamente al cine, cartelera y recomendaciones cinematográficas. Invita cordialmente al usuario a consultar sobre películas.\n` +
+        `- VERACIDAD DE CARTELERA VS CATÁLOGO / STREAMING:\n` +
+        `  * SOLO menciona funciones en cines comerciales de Perú (Cineplanet / Cinemark - S/. 16.00 a 26.00) si la película está explícitamente confirmada como "EN CARTELERA AHORA" en la lista de arriba.\n` +
+        `  * Para películas de catálogo, años anteriores (ej: 2021, 2022) o de otros países que no están en salas físicas activas, indica claramente que se recomiendan para disfrutar desde la comodidad del hogar en plataformas de streaming o formato digital. ¡NUNCA inventes funciones de cine físico para obras de catálogo antiguo o digital!\n` +
+        `- DIRECTRIZ DE NACIONALIDADES:\n` +
+        `  Respeta estrictamente el país de origen indicado para cada producción (ej: títulos peruanos, españoles, coreanos, etc.).\n` +
+        `- RECOMENDACIONES:\n` +
+        `  Destaca 2 o 3 opciones colocando sus títulos exactos en **negrita**, menciona por qué verlas y aclara si están en salas de cine o disponibles en streaming.\n` +
+        `- Responde en 1 solo mensaje completo, cercano y con excelente criterio cinematográfico.`;
 
       const genRes = await llm.generateTextWithMetadata(generalPrompt, {
         provider: 'gemini',
         model: 'gemini-3.5-flash-lite',
         maxTokens: 1200,
+        userQuery: textToSend,
         systemPrompt:
           'Eres Diana Thorne, Moderadora de CinePlus. Tienes una restricción estricta de dominio: SOLO atiendes consultas sobre cine, películas, cartelera en Soles y salas peruanas. Si recibes preguntas ajenas (como medicina, salud, política, etc.), declina con calidez y redirige al usuario hacia el cine.',
       });

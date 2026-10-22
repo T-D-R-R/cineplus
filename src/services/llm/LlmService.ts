@@ -15,6 +15,7 @@ export interface LlmGenerationOptions {
   provider?: AiProvider;
   model?: string;
   systemPrompt?: string;
+  userQuery?: string;
   temperature?: number;
   maxTokens?: number;
 }
@@ -56,6 +57,7 @@ export class LlmService {
         body: JSON.stringify({
           prompt,
           systemPrompt: options.systemPrompt,
+          userQuery: options.userQuery,
           provider: options.provider,
           model: options.model,
           temperature: options.temperature,
