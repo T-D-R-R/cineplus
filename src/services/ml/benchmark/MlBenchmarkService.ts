@@ -372,16 +372,37 @@ export class MlBenchmarkService {
     const winningClassifier =
       this.models.find((m) => m.id === championModel.modelId) || this.models[0];
 
-    // 6. Predecir cada una de las reseñas reales de la película
+    // 6. Predecir cada una de las reseñas reales de la película (Enfoque Híbrido Multimodal: NLP + Estrellas)
     const predictions = movieCorpus.map((review, i) => {
       const pred = winningClassifier.predict(review.comentario);
+
+      let finalSentiment = pred.sentiment;
+      let finalConfidence = pred.confidence;
+
+      // Calibración Multimodal: La calificación por estrellas actúa como señal ordinal del usuario
+      if (review.puntaje !== undefined && review.puntaje !== null) {
+        if (review.puntaje >= 4) {
+          // 4 o 5 estrellas confirma intención favorable
+          if (pred.sentiment === 'neutral' || pred.sentiment === 'positivo') {
+            finalSentiment = 'positivo';
+            finalConfidence = Math.max(pred.confidence, review.puntaje === 5 ? 98 : 88);
+          }
+        } else if (review.puntaje <= 2) {
+          // 1 o 2 estrellas confirma intención desfavorable
+          if (pred.sentiment === 'neutral' || pred.sentiment === 'negativo') {
+            finalSentiment = 'negativo';
+            finalConfidence = Math.max(pred.confidence, review.puntaje === 1 ? 98 : 88);
+          }
+        }
+      }
+
       return {
         id: review.id || `rev-${i}`,
         userName: review.nombre_usuario,
         comment: review.comentario,
         rating: review.puntaje,
-        predictedSentiment: pred.sentiment,
-        confidence: pred.confidence,
+        predictedSentiment: finalSentiment,
+        confidence: finalConfidence,
         algorithmUsed: championModel.modelName,
         isSimulated: Boolean(review.isSimulated),
       };

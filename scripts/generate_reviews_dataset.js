@@ -47,19 +47,24 @@ const TEMPLATES_POSITIVOS = [
   'Innovadora, fresca y con una propuesta visual que redefine los estándares del género.',
   'La atmósfera envolvente y el trabajo de fotografía justifican verla en la mejor sala disponible.',
   'Un balance extraordinario entre drama, tensión y momentos de puro espectáculo cinematográfico.',
-  'Gran fidelidad a la historia con un toque moderno y maduro que se agradece mucho.'
+  'Gran fidelidad a la historia con un toque moderno y maduro que se agradece mucho.',
+  'Película excelente, con muy buena dirección, actuaciones memorables y me gustó muchísimo.',
+  'Excelente película, una producción impecable y una dirección que cautiva de principio a fin.',
+  'Una muy buena película, sumamente recomendada para todos los amantes del buen cine.',
+  'Me gustó bastante, una experiencia divertida, emocionante y con excelente ritmo.',
+  'Excelente historia y muy buenas actuaciones, de lo mejor que se ha estrenado en el año.'
 ];
 
 const TEMPLATES_NEUTRALES = [
-  'Tiene aspectos visuales increíbles pero el ritmo se vuelve algo lento en el segundo acto.',
+  'Tiene aspectos visuales interesantes pero el ritmo se vuelve algo lento en el segundo acto.',
   'Cumple con entretener pero no aporta nada verdaderamente innovador a la fórmula conocida.',
-  'Buenas actuaciones individuales, aunque el desenlace se sintió algo apresurado.',
+  'Actuaciones aceptables, aunque el desenlace se sintió algo apresurado.',
   'Una experiencia pasable para disfrutar con palomitas, sin llegar a ser una joya imprescindible.',
-  'Los primeros 40 minutos son brillantes, luego la trama pierde algo de fuerza y cohesión.',
-  'Tiene momentos muy divertidos e ingeniosos mezclados con escenas que se alargan demasiado.',
-  'Visualmente es un espectáculo, aunque el guion peca de predecible en varios puntos clave.',
+  'Los primeros 40 minutos son interesantes, luego la trama pierde algo de fuerza y cohesión.',
+  'Tiene momentos divertidos mezclados con escenas que se alargan demasiado sin necesidad.',
+  'Visualmente cumple, aunque el guion peca de predecible en varios puntos clave.',
   'Para fanáticos del género resultará satisfactoria, pero para el público general puede ser densa.',
-  'La fotografía es excelente pero no logré conectar del todo con la motivación de los personajes.',
+  'La cinematografía es aceptable pero no logré conectar del todo con la motivación de los personajes.',
   'Una película correcta con altibajos notables, buena para un fin de semana tranquilo.',
   'Se deja ver con agrado aunque no creo que la vuelva a ver una segunda vez.',
   'La banda sonora sobresale mucho más que la historia en sí, dejando sensaciones encontradas.'
