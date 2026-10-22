@@ -66,6 +66,39 @@ export const DEMO_PRESETS: DemoAccountPreset[] = [
   },
 ];
 
+export const KNOWN_SUPABASE_USERS: Record<
+  string,
+  { id: string; name: string; role?: UserRole; telegramChatId?: string; telegramUsername?: string }
+> = {
+  'freddeufracio@gmail.com': {
+    id: 'd63cd0fd-9caf-4d54-a918-b31cb3f4c029',
+    name: 'Fredd Eufracio',
+    telegramChatId: '5366286359',
+    telegramUsername: 'Fredd1532',
+  },
+  'luis@gmail.com': {
+    id: '8a5d2366-0d10-4a9e-a5b2-b50b1f9a0e7d',
+    name: 'Luis',
+    telegramChatId: '5466485772',
+    telegramUsername: 'Sssc_llas',
+  },
+  '2144403040@undac.edu.pe': {
+    id: '1bc17c43-fa78-47d6-beb4-50c8273beaf4',
+    name: 'D_R',
+  },
+  'danielricrarojas@gmail.com': {
+    id: '1c0f1b4e-f53e-4a7a-bc02-3ee9955954aa',
+    name: 'Daniel',
+  },
+  'teoricrarojas@gmail.com': {
+    id: 'e54091ad-87d0-4717-8a4e-6ffe7be11aaa',
+    name: 'Teo Ricra Rojas',
+    role: 'admin',
+    telegramChatId: '2088180188',
+    telegramUsername: 'Dan',
+  },
+};
+
 type AuthListener = (user: User | null) => void;
 
 export class AuthService {
@@ -325,6 +358,7 @@ export class AuthService {
           });
           this.setCurrentUser(user);
           this.saveToLocalDb(user, password);
+          KNOWN_SUPABASE_USERS[cleanEmail] = { id: data.user.id, name: cleanName, role: assignedRole };
           return user;
         }
         if (error && error.message) {
@@ -377,12 +411,13 @@ export class AuthService {
       throw new Error('Por favor ingresa tu correo electrónico registrado o teléfono.');
     }
 
-    // Buscar en BD local o presets
+    // 1. Buscar en BD local (localStorage del navegador actual)
     const localDb = this.getLocalUsersDb();
     let record = localDb.find(
       (u) => u.email.toLowerCase() === cleanId || (u.phone && u.phone.trim() === cleanId)
     );
 
+    // 2. Buscar en presets de demostración
     if (!record) {
       const preset = DEMO_PRESETS.find((p) => p.email.toLowerCase() === cleanId);
       if (preset) {
@@ -392,13 +427,39 @@ export class AuthService {
           name: preset.name,
           role: preset.role,
           password: preset.password,
+          telegramChatId: preset.telegramChatId,
+          telegramUsername: preset.telegramUsername,
         };
       }
     }
 
-    // Si aún no se encuentra, verificar en Supabase sesión activa o rechazar
+    // 3. Buscar en usuarios registrados en Supabase Cloud
     if (!record) {
-      throw new Error('No se encontró ninguna cuenta registrada con este correo electrónico o teléfono. Verifica tus datos o regístrate.');
+      const known = KNOWN_SUPABASE_USERS[cleanId];
+      if (known) {
+        record = {
+          id: known.id,
+          email: cleanId,
+          name: known.name,
+          role: known.role || 'usuario',
+          telegramChatId: known.telegramChatId,
+          telegramUsername: known.telegramUsername,
+        };
+      }
+    }
+
+    // 4. Si aún no está en caché pero es un correo electrónico válido, permitir flujo cloud Supabase
+    if (!record) {
+      if (cleanId.includes('@') && cleanId.includes('.')) {
+        record = {
+          id: `cloud-${cleanId}`,
+          email: cleanId,
+          name: cleanId.split('@')[0],
+          role: 'usuario',
+        };
+      } else {
+        throw new Error('No se encontró ninguna cuenta registrada con este correo electrónico o teléfono. Verifica tus datos o regístrate.');
+      }
     }
 
     let telChatId = record.telegramChatId;
@@ -460,9 +521,21 @@ export class AuthService {
       throw new Error('No hay una solicitud de recuperación activa para esta cuenta.');
     }
 
-    // 1. Si no tiene Telegram enlazado en memoria, buscar si ya envió /start o si es la cuenta del admin
+    // 1. Si no tiene Telegram enlazado en memoria, buscar en usuarios conocidos o en enlaces recientes
     if (!session.user.telegramChatId) {
-      if (cleanEmail === 'teoricrarojas@gmail.com' || cleanEmail === 'admin@cineplus.pe') {
+      const known = KNOWN_SUPABASE_USERS[cleanEmail];
+      if (known?.telegramChatId) {
+        session.user = new User({
+          id: String(session.user.id || known.id),
+          email: session.user.email,
+          name: session.user.name || known.name,
+          role: session.user.role,
+          phone: session.user.phone,
+          telegramChatId: known.telegramChatId,
+          telegramUsername: known.telegramUsername,
+          isDemo: session.user.isDemo,
+        });
+      } else if (cleanEmail === 'teoricrarojas@gmail.com' || cleanEmail === 'admin@cineplus.pe') {
         session.user = new User({
           id: String(session.user.id),
           email: session.user.email,
@@ -476,9 +549,12 @@ export class AuthService {
         await this.linkTelegramAccount(String(session.user.id), '2088180188', 'Dan');
       } else {
         const recent = await telegramService.pollRecentLinks();
-        // Coincidencia exacta por ID de usuario registrado
+        // Coincidencia exacta por ID de usuario registrado o linkPayload
         const match = recent.find(
-          (l) => l.linkPayload === `link_${session.user.id}` || l.linkPayload === session.user.id
+          (l) =>
+            l.linkPayload === `link_${session.user.id}` ||
+            l.linkPayload === session.user.id ||
+            (known && (l.linkPayload === `link_${known.id}` || l.linkPayload === known.id))
         );
 
         if (match) {
