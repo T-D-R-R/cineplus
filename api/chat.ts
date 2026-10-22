@@ -213,7 +213,7 @@ export default async function handler(req: any, res: any) {
           temperature,
           max_tokens: maxTokens,
         }),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(25000),
       });
 
       if (openRouterRes.ok) {
