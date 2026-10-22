@@ -77,6 +77,8 @@ Despliega la sección **"Environment Variables"** antes de hacer clic en Deploy 
 | `VITE_SUPABASE_URL` | Cliente (Pública) | Project URL de [supabase.com](https://supabase.com/). |
 | `VITE_SUPABASE_ANON_KEY` | Cliente (Pública) | Clave anónima pública de Supabase. |
 | `VITE_GOOGLE_MAPS_API_KEY` | Cliente (Opcional) | Clave de Google Maps (si se omite, se activa el Modo Demo automáticamente). |
+| `VITE_TELEGRAM_BOT_TOKEN` | Cliente (Opcional) | Token de BotFather para autenticación 2FA y envío de códigos OTP. |
+| `VITE_TELEGRAM_BOT_USERNAME` | Cliente (Opcional) | Nombre de usuario del bot en Telegram (por defecto: `CinePlusSeguridad_bot`). |
 | `GEMINI_API_KEY` | Servidor (Secreta) | Clave de Google AI Studio para el Agente Crítico de Arte y moderación. |
 | `OPENROUTER_API_KEY` | Servidor (Secreta) | Clave de OpenRouter para DeepSeek (Agente Comercial y Logística). |
 | `GROK_API_KEY` | Servidor (Opcional) | Clave de xAI Grok (si no se proporciona, el sistema usa automáticamente el motor de respaldo sin costo). |

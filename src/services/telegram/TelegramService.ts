@@ -4,8 +4,8 @@
  * Proporciona autenticación 2FA, envío de códigos OTP en tiempo real y alertas de seguridad.
  */
 
-const BOT_TOKEN = '8266177781:AAGBUr6iunQpPvQtvPNLtgkWFmwnzdap0g0';
-const BOT_USERNAME = 'CinePlusSeguridad_bot';
+const BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || '';
+const BOT_USERNAME = import.meta.env.VITE_TELEGRAM_BOT_USERNAME || 'CinePlusSeguridad_bot';
 const TELEGRAM_API_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 export interface TelegramUpdate {
