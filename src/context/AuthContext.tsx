@@ -36,6 +36,7 @@ interface AuthContextType {
   verifyOtp: (email: string, code: string) => boolean;
   resetPassword: (email: string, newPassword: string, code?: string) => Promise<boolean>;
   linkTelegramAccount: (userId: string, chatId: string | number, username?: string) => Promise<boolean>;
+  unlinkTelegram: () => Promise<boolean>;
   checkAndSyncTelegram: () => Promise<{ linked: boolean; message: string }>;
   isRecoveryMode: boolean;
   setIsRecoveryMode: (val: boolean) => void;
@@ -126,6 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return authService.linkTelegramAccount(userId, chatId, username);
   };
 
+  const unlinkTelegram = async () => {
+    return authService.unlinkTelegramAccount();
+  };
+
   const checkAndSyncTelegram = async () => {
     return authService.checkAndSyncTelegram();
   };
@@ -149,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyOtp,
         resetPassword,
         linkTelegramAccount,
+        unlinkTelegram,
         checkAndSyncTelegram,
         isRecoveryMode,
         setIsRecoveryMode,

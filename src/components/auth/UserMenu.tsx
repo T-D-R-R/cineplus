@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { telegramService } from '../../services/telegram/TelegramService';
 
 export function UserMenu() {
-  const { user, isAuthenticated, openAuthModal, logout, checkAndSyncTelegram } = useAuth();
+  const { user, isAuthenticated, openAuthModal, logout, checkAndSyncTelegram, unlinkTelegram } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLinkingTelegram, setIsLinkingTelegram] = useState(false);
   const [telegramStatusMsg, setTelegramStatusMsg] = useState<string | null>(null);
@@ -139,9 +139,30 @@ export function UserMenu() {
 
           <div className="space-y-1">
             {user.hasTelegramLinked() ? (
-              <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-sky-400 bg-sky-950/40 border border-sky-500/30">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-sky-400" />
-                <span className="truncate">Telegram: @{user.telegramUsername || 'Conectado'}</span>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-sky-400 bg-sky-950/40 border border-sky-500/30">
+                  <div className="flex items-center gap-2 truncate">
+                    <ShieldCheck className="w-4 h-4 shrink-0 text-sky-400" />
+                    <span className="truncate">Telegram: @{user.telegramUsername || 'Conectado'}</span>
+                  </div>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      await unlinkTelegram();
+                      setTelegramStatusMsg('Telegram desvinculado. Puedes volver a vincular tu chat.');
+                      setTimeout(() => setTelegramStatusMsg(null), 4000);
+                    }}
+                    className="text-[10px] text-sky-400/80 hover:text-rose-400 underline ml-1.5 shrink-0 cursor-pointer"
+                    title="Desvincular para enlazar otra cuenta de Telegram"
+                  >
+                    Cambiar
+                  </button>
+                </div>
+                {telegramStatusMsg && (
+                  <p className="px-3 text-[10px] text-sky-400/90 font-medium animate-in fade-in">
+                    {telegramStatusMsg}
+                  </p>
+                )}
               </div>
             ) : (
               <div className="space-y-1.5">

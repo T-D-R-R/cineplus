@@ -99,14 +99,24 @@ export class AuthService {
           const userMeta = session.user.user_metadata || {};
           const localRecord = this.getLocalUsersDb().find(u => u.email === (session.user.email || '').toLowerCase());
           
+          let telChatId = userMeta.telegram_chat_id || localRecord?.telegramChatId;
+          let telUser = userMeta.telegram_username || localRecord?.telegramUsername;
+
+          // Protección: Si no es la cuenta de Teo/Admin pero tiene asignado por error su Chat ID, limpiar
+          const emailLower = (session.user.email || '').toLowerCase();
+          if (emailLower !== 'teoricrarojas@gmail.com' && emailLower !== 'admin@cineplus.pe' && telChatId === '2088180188') {
+            telChatId = undefined;
+            telUser = undefined;
+          }
+
           this.currentUser = new User({
             id: session.user.id,
             email: session.user.email || 'usuario@cineplus.pe',
             name: userMeta.name || userMeta.full_name || session.user.email?.split('@')[0] || 'Usuario',
             role: (userMeta.role as UserRole) || 'usuario',
             phone: userMeta.phone || localRecord?.phone,
-            telegramChatId: userMeta.telegram_chat_id || localRecord?.telegramChatId,
-            telegramUsername: userMeta.telegram_username || localRecord?.telegramUsername,
+            telegramChatId: telChatId,
+            telegramUsername: telUser,
             avatarUrl: userMeta.avatar_url,
             isDemo: false,
           });
@@ -124,6 +134,16 @@ export class AuthService {
       const stored = localStorage.getItem(LOCAL_USER_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
+        if (
+          parsed.email &&
+          parsed.email.toLowerCase() !== 'teoricrarojas@gmail.com' &&
+          parsed.email.toLowerCase() !== 'admin@cineplus.pe' &&
+          parsed.telegramChatId === '2088180188'
+        ) {
+          parsed.telegramChatId = undefined;
+          parsed.telegramUsername = undefined;
+          localStorage.setItem(LOCAL_USER_STORAGE_KEY, JSON.stringify(parsed));
+        }
         this.currentUser = User.fromJson(parsed);
         this.notifyListeners();
       }
@@ -381,14 +401,25 @@ export class AuthService {
       throw new Error('No se encontró ninguna cuenta registrada con este correo electrónico o teléfono. Verifica tus datos o regístrate.');
     }
 
+    let telChatId = record.telegramChatId;
+    let telUser = record.telegramUsername;
+    if (
+      record.email.toLowerCase() !== 'teoricrarojas@gmail.com' &&
+      record.email.toLowerCase() !== 'admin@cineplus.pe' &&
+      telChatId === '2088180188'
+    ) {
+      telChatId = undefined;
+      telUser = undefined;
+    }
+
     const user = new User({
       id: record.id,
       email: record.email,
       name: record.name,
       role: record.role,
       phone: record.phone,
-      telegramChatId: record.telegramChatId,
-      telegramUsername: record.telegramUsername,
+      telegramChatId: telChatId,
+      telegramUsername: telUser,
       isDemo: true,
     });
 
@@ -445,9 +476,10 @@ export class AuthService {
         await this.linkTelegramAccount(String(session.user.id), '2088180188', 'Dan');
       } else {
         const recent = await telegramService.pollRecentLinks();
+        // Coincidencia exacta por ID de usuario registrado
         const match = recent.find(
           (l) => l.linkPayload === `link_${session.user.id}` || l.linkPayload === session.user.id
-        ) || (recent.length > 0 ? recent[recent.length - 1] : null);
+        );
 
         if (match) {
           session.user = new User({
@@ -639,7 +671,7 @@ export class AuthService {
     username?: string
   ): Promise<boolean> {
     const localDb = this.getLocalUsersDb();
-    const userRecord = localDb.find((u) => u.id === userId || u.email === this.currentUser?.email);
+    const userRecord = localDb.find((u) => u.id === userId || (this.currentUser && u.email === this.currentUser.email));
 
     if (userRecord) {
       userRecord.telegramChatId = String(chatId);
@@ -665,7 +697,24 @@ export class AuthService {
         avatarUrl: this.currentUser.avatarUrl,
         isDemo: this.currentUser.isDemo,
       });
+      this.persistLocalUser(updatedUser);
       this.setCurrentUser(updatedUser);
+
+      // Sincronizar en Supabase si hay sesión activa
+      const supabase = SupabaseService.getInstance().getClient();
+      if (supabase) {
+        try {
+          await supabase.auth.updateUser({
+            data: {
+              telegram_chat_id: String(chatId),
+              telegram_username: username || '',
+            },
+          });
+        } catch (err) {
+          console.warn('No se pudo guardar telegram en Supabase user_metadata:', err);
+        }
+      }
+
       await telegramService.sendWelcomeLinkMessage(chatId, updatedUser.name);
       return true;
     }
@@ -674,8 +723,58 @@ export class AuthService {
   }
 
   /**
+   * Desvincula la cuenta de Telegram del usuario actual.
+   */
+  public async unlinkTelegramAccount(): Promise<boolean> {
+    if (!this.currentUser) return false;
+
+    const localDb = this.getLocalUsersDb();
+    const userRecord = localDb.find((u) => u.id === this.currentUser?.id || u.email === this.currentUser?.email);
+
+    if (userRecord) {
+      delete userRecord.telegramChatId;
+      delete userRecord.telegramUsername;
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(localDb));
+        }
+      } catch {
+        // Ignorar
+      }
+    }
+
+    const updatedUser = new User({
+      id: String(this.currentUser.id),
+      email: this.currentUser.email,
+      name: this.currentUser.name,
+      role: this.currentUser.role,
+      phone: this.currentUser.phone,
+      avatarUrl: this.currentUser.avatarUrl,
+      isDemo: this.currentUser.isDemo,
+    });
+    this.persistLocalUser(updatedUser);
+    this.setCurrentUser(updatedUser);
+
+    const supabase = SupabaseService.getInstance().getClient();
+    if (supabase) {
+      try {
+        await supabase.auth.updateUser({
+          data: {
+            telegram_chat_id: null,
+            telegram_username: null,
+          },
+        });
+      } catch (err) {
+        console.warn('No se pudo limpiar telegram en Supabase user_metadata:', err);
+      }
+    }
+
+    return true;
+  }
+
+  /**
    * Sincroniza automáticamente los comandos /start recibidos por el bot
-   * para asociar al usuario activo o por su email/teléfono.
+   * para asociar al usuario activo por su ID único.
    */
   public async checkAndSyncTelegram(): Promise<{ linked: boolean; message: string }> {
     const recentLinks = await telegramService.pollRecentLinks();
@@ -683,15 +782,15 @@ export class AuthService {
       return { linked: false, message: 'No se detectó actividad reciente en @CinePlusSeguridad_bot.' };
     }
 
-    // Buscar si alguno de los links coincide con el usuario actual o su ID
     const current = this.currentUser;
     if (!current) {
       return { linked: false, message: 'Inicia sesión para vincular tu cuenta.' };
     }
 
+    // Coincidencia estricta por identificador único del usuario
     const match = recentLinks.find(
       (l) => l.linkPayload === `link_${current.id}` || l.linkPayload === current.id
-    ) || recentLinks[0]; // Si es el único usuario que interactuó recientemente
+    );
 
     if (match) {
       await this.linkTelegramAccount(String(current.id), match.chatId, match.username);
