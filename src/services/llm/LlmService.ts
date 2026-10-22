@@ -88,10 +88,16 @@ export class LlmService {
       try {
         const model = options.model || 'deepseek/deepseek-chat';
         const res = await this.callOpenRouter(prompt, config.openrouterApiKey, model, options);
+        const m = (model || '').toLowerCase();
+        const providerLabel = m.includes('llama')
+          ? 'Meta LLaMA 3.3 (OpenRouter)'
+          : m.includes('qwen')
+          ? 'Qwen 2.5 (OpenRouter)'
+          : 'DeepSeek V3 (OpenRouter)';
         if (res) {
           return {
             text: res,
-            providerUsed: 'OpenRouter (DeepSeek)',
+            providerUsed: providerLabel,
             modelUsed: model,
             isRealApi: true,
           };
@@ -174,8 +180,12 @@ export class LlmService {
     return {
       text: fallbackText,
       providerUsed:
-        targetProvider === 'openrouter'
-          ? 'DeepSeek (Modo Autónomo)'
+        typeof options.model === 'string' && options.model.includes('llama')
+          ? 'Meta LLaMA 3.3 (Modo Autónomo)'
+          : typeof options.model === 'string' && options.model.includes('qwen')
+          ? 'Qwen 2.5 (Modo Autónomo)'
+          : targetProvider === 'openrouter'
+          ? 'DeepSeek V3 (Modo Autónomo)'
           : targetProvider === 'grok'
           ? 'xAI Grok (Modo Autónomo)'
           : 'Google Gemini (Modo Autónomo)',

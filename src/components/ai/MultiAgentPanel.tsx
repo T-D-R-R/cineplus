@@ -1,17 +1,13 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Bot,
   Sparkles,
   Brain,
   Scale,
   Ticket,
-  MessageSquareCheck,
   RefreshCw,
   ChevronDown,
   ChevronUp,
-  ShieldCheck,
-  Activity,
 } from 'lucide-react';
 import { Movie } from '../../domain/Movie';
 import { AgentCoordinator } from '../../services/agents/AgentCoordinator';
@@ -146,111 +142,7 @@ export function MultiAgentPanel({ movie }: MultiAgentPanelProps) {
       {/* Resultados de la Deliberación */}
       {!loading && deliberation && expanded && (
         <div className="p-6 sm:p-8 space-y-8 animate-in fade-in duration-300">
-          {/* Fila 1: Triada de Métricas (k-NN + Naive Bayes + Auditoría) */}
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Tarjeta ML: Afinidad de Usuario (k-NN) */}
-            <div className="glass-panel rounded-2xl p-5 border border-indigo-500/20 bg-indigo-950/15 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
-                  <Brain className="w-4 h-4" /> Machine Learning (k-NN)
-                </span>
-                <span className="text-lg font-black text-indigo-300">
-                  {deliberation.userAffinityScore}% Afinidad
-                </span>
-              </div>
-              <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all duration-1000"
-                  style={{ width: `${deliberation.userAffinityScore}%` }}
-                />
-              </div>
-              <p className="text-xs text-slate-300">{deliberation.userAffinityExplanation}</p>
-            </div>
-
-            {/* Tarjeta ML: Sentimiento Colectivo (Naive Bayes con 500 reseñas) */}
-            <div className="glass-panel rounded-2xl p-5 border border-emerald-500/20 bg-emerald-950/15 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
-                  <MessageSquareCheck className="w-4 h-4" /> Sentimiento Audiencia (NB)
-                </span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300">
-                  {deliberation.sentimentStats.dominantSentiment}
-                </span>
-              </div>
-              
-              {/* Barra de Distribución de Sentimiento */}
-              <div className="w-full h-2.5 bg-slate-800 rounded-full flex overflow-hidden">
-                <div
-                  className="bg-emerald-500 transition-all duration-1000"
-                  style={{ width: `${deliberation.sentimentStats.positiveRatio}%` }}
-                  title={`Positivo: ${deliberation.sentimentStats.positiveRatio}%`}
-                />
-                <div
-                  className="bg-amber-500 transition-all duration-1000"
-                  style={{ width: `${deliberation.sentimentStats.neutralRatio}%` }}
-                  title={`Neutral: ${deliberation.sentimentStats.neutralRatio}%`}
-                />
-                <div
-                  className="bg-rose-500 transition-all duration-1000"
-                  style={{ width: `${deliberation.sentimentStats.negativeRatio}%` }}
-                  title={`Negativo: ${deliberation.sentimentStats.negativeRatio}%`}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  {deliberation.sentimentStats.positiveRatio}%
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500" />
-                  {deliberation.sentimentStats.neutralRatio}%
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-rose-500" />
-                  {deliberation.sentimentStats.negativeRatio}%
-                </span>
-              </div>
-            </div>
-
-            {/* Tarjeta Auditoría & Fact-Checking (Agente 5) */}
-            <div className="glass-panel rounded-2xl p-5 border border-amber-500/20 bg-amber-950/15 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4" /> Fact-Checking & Auditoría
-                </span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">
-                  {deliberation.auditMetrics.consistencyScore}% Confiabilidad
-                </span>
-              </div>
-              <div className="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-emerald-500 rounded-full transition-all duration-1000"
-                  style={{ width: `${deliberation.auditMetrics.consistencyScore}%` }}
-                />
-              </div>
-              <p className="text-xs text-slate-300">
-                {deliberation.auditMetrics.factualNotes}
-              </p>
-            </div>
-          </div>
-
-          {/* Enlace directo al ML Dashboard para el evaluador */}
-          <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs">
-            <span className="text-slate-400 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-indigo-400" />
-              Respaldado por el laboratorio de 5 algoritmos de predicción (Benchmark 80/20)
-            </span>
-            <Link
-              to="/ml-dashboard"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 text-indigo-300 hover:text-white font-bold transition-all"
-            >
-              <span>Abrir ML Dashboard en Vivo</span>
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            </Link>
-          </div>
-
-          {/* Fila 2: Intercambio y Deliberación de los 5 Agentes */}
+          {/* Deliberación Secuencial de los 5 Agentes */}
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
               <Bot className="w-4 h-4 text-indigo-400" /> Deliberación Secuencial del Comité (5 Agentes)

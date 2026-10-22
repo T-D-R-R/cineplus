@@ -46,10 +46,10 @@ export class LogisticsAgent {
       `Evalúa la conveniencia comercial de ir al cine a ver "${movie.title}".\n` +
       `Duración: ${movie.runtime || 120} minutos.\n` +
       `Sede principal de referencia: ${targetShowtime.theaterName} (${targetShowtime.city}).\n` +
-      `Rango de precios: ${priceRangeStr}.\n` +
+      `Rango de precios en Soles peruanos: ${priceRangeStr} por entrada.\n` +
       `Formatos disponibles: ${targetShowtime.formats.join(', ')}.\n` +
       `Horarios clave: ${targetShowtime.availableHours.join(', ')}.\n` +
-      `Redacta tu dictamen comercial en 3 oraciones indicando qué formato conviene y si el costo justifica la experiencia en sala.`;
+      `Redacta tu dictamen comercial en 3 oraciones indicando qué formato conviene (2D o XD) y si el costo en Soles justifica la experiencia en sala.`;
 
     const result = await this.llm.generateTextWithMetadata(userPrompt, {
       provider: 'openrouter',
@@ -62,7 +62,7 @@ export class LogisticsAgent {
       id: `msg_logistics_${Date.now()}`,
       role: 'LOGISTICS',
       agentName: 'Renzo Carranza',
-      agentTitle: 'Asesor Comercial (DeepSeek / OpenRouter)',
+      agentTitle: 'Asesor Comercial (DeepSeek V3)',
       avatar: '🎟️',
       badgeColor: 'bg-emerald-600/20 text-emerald-400 border-emerald-500/30',
       content: result.text,

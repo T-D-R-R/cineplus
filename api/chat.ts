@@ -174,13 +174,24 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  // 1. Ruta OpenRouter / DeepSeek (Exclusivo para Asesor Comercial o consultas directas a DeepSeek)
-  const isDeepSeekOrOpenRouter =
+  // Helper para asignar nombres amigables al motor de IA según el modelo real
+  const getOpenRouterDisplayName = (targetModel: string): string => {
+    const m = (targetModel || '').toLowerCase();
+    if (m.includes('llama')) return 'Meta LLaMA 3.3 (OpenRouter)';
+    if (m.includes('qwen')) return 'Qwen 2.5 (OpenRouter)';
+    if (m.includes('deepseek')) return 'DeepSeek V3 (OpenRouter)';
+    if (m.includes('grok')) return 'xAI Grok (OpenRouter)';
+    return `OpenRouter (${targetModel})`;
+  };
+
+  // 1. Ruta OpenRouter (DeepSeek V3, Meta LLaMA 3.3, Qwen 2.5)
+  const isOpenRouterTarget =
     provider === 'openrouter' ||
     provider === 'deepseek' ||
-    (typeof model === 'string' && model.includes('deepseek'));
+    (typeof model === 'string' &&
+      (model.includes('deepseek') || model.includes('llama') || model.includes('qwen')));
 
-  if (isDeepSeekOrOpenRouter && openRouterKey) {
+  if (isOpenRouterTarget && openRouterKey) {
     try {
       const targetModel = model || 'deepseek/deepseek-chat';
 
@@ -202,21 +213,21 @@ export default async function handler(req: any, res: any) {
           temperature,
           max_tokens: maxTokens,
         }),
-        signal: AbortSignal.timeout(11000), // 11s para dar margen suficiente a DeepSeek sin demoras excesivas
+        signal: AbortSignal.timeout(12000),
       });
 
       if (openRouterRes.ok) {
         const data = (await openRouterRes.json()) as any;
         let text = data?.choices?.[0]?.message?.content?.trim();
         if (text) {
-          // Limpiar cualquier etiqueta de pensamiento interno <think>...</think> si DeepSeek la incluye
+          // Limpiar cualquier etiqueta de pensamiento interno <think>...</think>
           text = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
           res.statusCode = 200;
           res.setHeader('Content-Type', 'application/json');
           return res.end(
             JSON.stringify({
               text,
-              providerUsed: 'DeepSeek (OpenRouter)',
+              providerUsed: getOpenRouterDisplayName(targetModel),
               modelUsed: targetModel,
               isRealApi: true,
             })
@@ -229,13 +240,12 @@ export default async function handler(req: any, res: any) {
   }
 
   // 2. Ruta Google Gemini (Agente Crítica Valeria Morales, Moderadora Diana Thorne y Chatbot)
-  if ((provider === 'gemini' || provider === 'auto' || provider === 'grok' || !isDeepSeekOrOpenRouter) && geminiKey) {
+  if ((provider === 'gemini' || provider === 'auto' || provider === 'grok' || !isOpenRouterTarget) && geminiKey) {
     try {
       const candidateModels = [
         'gemini-3.5-flash-lite',
-        model || 'gemini-3.5-flash',
         'gemini-flash-lite-latest',
-        'gemini-3.8-flash',
+        model || 'gemini-3.8-flash',
       ];
       for (const m of candidateModels) {
         try {
@@ -275,9 +285,7 @@ export default async function handler(req: any, res: any) {
                 JSON.stringify({
                   text,
                   providerUsed:
-                    provider === 'grok' || provider === 'auto'
-                      ? 'Diana Thorne (Moderadora IA - Gemini Core)'
-                      : 'Google Gemini',
+                    m.includes('pro') ? 'Google Gemini Pro' : 'Google Gemini',
                   modelUsed: m,
                   isRealApi: true,
                 })
@@ -395,7 +403,11 @@ export default async function handler(req: any, res: any) {
     JSON.stringify({
       text: fallbackText,
       providerUsed:
-        provider === 'openrouter'
+        typeof model === 'string' && model.includes('llama')
+          ? 'Meta LLaMA (Servidor Local)'
+          : typeof model === 'string' && model.includes('qwen')
+          ? 'Qwen (Servidor Local)'
+          : provider === 'openrouter' || (typeof model === 'string' && model.includes('deepseek'))
           ? 'DeepSeek (Servidor Local)'
           : provider === 'grok'
           ? 'xAI Grok (Servidor Local)'

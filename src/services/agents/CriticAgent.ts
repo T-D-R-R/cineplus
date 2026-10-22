@@ -59,16 +59,17 @@ export class CriticAgent {
       'el arco de los personajes, el tono y la solidez del guion, apoyándote en métricas de audiencia. ' +
       'Sé perspicaz, apasionado y directo. No uses saludos genéricos.';
 
+    const releaseYear = movie.releaseDate ? movie.releaseDate.slice(0, 4) : 'Estreno';
     const userPrompt =
-      `Evalúa la película "${movie.title}".\n` +
-      `Director: ${directorName}.\n` +
+      `Evalúa la película "${movie.title}" (${releaseYear}).\n` +
+      `Director acreditado en TMDb: ${directorName}.\n` +
       `Elenco principal: ${castNames}.\n` +
       `Géneros: ${genresList}.\n` +
-      `Calificación media: ${movie.voteAverage.toFixed(1)}/10.\n` +
+      `Calificación media oficial: ${movie.voteAverage.toFixed(1)}/10 (${movie.voteCount} votos).\n` +
       `Duración: ${movie.runtime || 120} minutos.\n` +
-      `Sinopsis: ${movie.overview}\n` +
+      `Sinopsis oficial: ${movie.overview || 'Sinopsis no provista.'}\n` +
       `Análisis de Sentimiento de la Comunidad (ML Naive Bayes): ${positiveRatio}% Positivo, ${neutralRatio}% Neutral, ${negativeRatio}% Negativo.\n` +
-      `Redacta tu dictamen crítico en 3 a 4 oraciones destacando si cinematográficamente vale la pena.`;
+      `Redacta tu dictamen crítico en 3 a 4 oraciones destacando el guion, actuaciones y si cinematográficamente vale la pena.`;
 
     const result = await this.llm.generateTextWithMetadata(userPrompt, {
       provider: 'gemini',

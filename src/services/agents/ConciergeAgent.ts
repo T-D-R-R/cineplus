@@ -79,28 +79,28 @@ export class OrchestratorAgent {
       'para el usuario sobre si debe comprar su entrada hoy.';
 
     let content = '';
-    let providerUsed = 'Modo Autónomo Heurístico';
+    let providerUsed = 'Google Gemini (Modo Autónomo)';
 
     try {
       const result = await this.llm.generateTextWithMetadata(userPrompt, {
-        provider: 'grok',
-        model: 'grok-2-latest',
+        provider: 'gemini',
+        model: 'gemini-3.5-flash-lite',
         systemPrompt,
         temperature: 0.5,
-        maxTokens: 200,
+        maxTokens: 220,
       });
       content = result.text.trim();
       providerUsed = result.providerUsed;
     } catch {
       // Fallback cognitivo de síntesis ejecutiva
-      content = `Tras contrastar los informes narrativo, logístico y técnico, y con la conformidad plena del dictamen de auditoría, este comité resuelve que la obra justifica con creces el costo del boleto en sala de cine. Recomendamos reservar en funciones nocturnas en formato XD o IMAX para apreciar tanto la fidelidad visual como el diseño sonoro certificado.`;
+      content = `Tras contrastar los informes narrativo, logístico y técnico, y con la conformidad plena del dictamen de auditoría, este comité resuelve que la obra justifica la inversión de la entrada en sala de cine. Recomendamos reservar en funciones nocturnas en formato XD o 2D estándar para apreciar la calidad audiovisual certificada.`;
     }
 
     const message: AgentMessage = {
       id: `msg_orchestrator_${Date.now()}`,
       role: 'ORCHESTRATOR',
       agentName: 'Dra. Diana Thorne',
-      agentTitle: 'Orquestadora y Presidenta del Comité',
+      agentTitle: 'Orquestadora y Presidenta del Comité (Gemini Core)',
       avatar: '⚖️',
       badgeColor: 'bg-amber-600/20 text-amber-300 border-amber-500/40',
       content,
