@@ -207,6 +207,16 @@ export class Movie extends BaseEntity {
       ? COUNTRY_NAMES[countryIso.toUpperCase()] || dto.production_countries?.[0]?.name || countryIso
       : dto.production_countries?.[0]?.name || null;
 
+    // Mapear géneros desde dto.genres o dto.genre_ids (utilizado por endpoints de listas de TMDb)
+    let parsedGenres: Genre[] = [];
+    if (dto.genres && Array.isArray(dto.genres) && dto.genres.length > 0) {
+      parsedGenres = dto.genres;
+    } else if (dto.genre_ids && Array.isArray(dto.genre_ids)) {
+      parsedGenres = dto.genre_ids
+        .map((id) => ({ id, name: TMDB_GENRE_ID_MAP[id] || 'Cine' }))
+        .filter((g) => Boolean(g.name));
+    }
+
     return new Movie({
       id: dto.id,
       title: dto.title,
@@ -216,7 +226,7 @@ export class Movie extends BaseEntity {
       voteAverage: dto.vote_average,
       voteCount: dto.vote_count,
       releaseDate: dto.release_date,
-      genres: dto.genres || [],
+      genres: parsedGenres,
       runtime: dto.runtime,
       budget: dto.budget,
       revenue: dto.revenue,
@@ -286,4 +296,26 @@ const COUNTRY_NAMES: Record<string, string> = {
   AU: 'Australia',
   CN: 'China',
   IN: 'India',
+};
+
+const TMDB_GENRE_ID_MAP: Record<number, string> = {
+  28: 'Acción',
+  12: 'Aventura',
+  16: 'Animación',
+  35: 'Comedia',
+  80: 'Crimen',
+  99: 'Documental',
+  18: 'Drama',
+  10751: 'Familiar',
+  14: 'Fantasía',
+  36: 'Historia',
+  27: 'Terror',
+  10402: 'Música',
+  9648: 'Misterio',
+  10749: 'Romance',
+  878: 'Ciencia Ficción',
+  10770: 'Película de TV',
+  53: 'Suspenso',
+  10752: 'Bélica',
+  37: 'Western',
 };

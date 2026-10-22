@@ -160,6 +160,40 @@ const TMDB_GENRES: Record<string, { id: number; name: string; keywords: string[]
   familia: { id: 10751, name: 'Familiar', keywords: ['familia', 'familiar', 'niños', 'hijos'] },
 };
 
+// Helpers defensivos para extracción robusta de datos de películas (evita caídas por tipos inesperados)
+function getMovieCountry(m: any): string {
+  if (!m) return 'Internacional';
+  if (typeof m.getCountryDisplayName === 'function') {
+    try {
+      const name = m.getCountryDisplayName();
+      if (name) return name;
+    } catch {
+      // Ignorar
+    }
+  }
+  return m.originCountry || 'Internacional';
+}
+
+function getMovieGenreNames(m: any): string[] {
+  if (!m || !m.genres) return ['Cine'];
+  if (Array.isArray(m.genres)) {
+    const list = m.genres
+      .map((g: any) => {
+        if (typeof g === 'string') return g;
+        if (g && typeof g.name === 'string') return g.name;
+        return null;
+      })
+      .filter(Boolean) as string[];
+    return list.length > 0 ? list : ['Cine'];
+  }
+  return ['Cine'];
+}
+
+function getMovieYear(m: any): string {
+  if (!m || !m.releaseDate || typeof m.releaseDate !== 'string') return 'Reciente';
+  return m.releaseDate.slice(0, 4) || 'Reciente';
+}
+
 export function CinePlusChatbot() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -273,16 +307,16 @@ export function CinePlusChatbot() {
       } | null = null;
 
       for (const m of billboardMovies) {
-        const titleNorm = m.title.toLowerCase();
+        const titleNorm = (m?.title || '').toLowerCase();
         const cleanTitle = titleNorm.replace(/[:\-].*$/, '').trim();
-        if (lower.includes(titleNorm) || (cleanTitle.length > 3 && lower.includes(cleanTitle))) {
+        if (titleNorm && (lower.includes(titleNorm) || (cleanTitle.length > 3 && lower.includes(cleanTitle)))) {
           matchedMovieData = {
             id: Number(m.id),
             title: m.title,
-            genres: m.genres.map((g) => g.name),
-            overview: m.overview,
-            theatricalStatus: m.theatricalStatus,
-            originCountry: m.getCountryDisplayName(),
+            genres: getMovieGenreNames(m),
+            overview: m.overview || '',
+            theatricalStatus: m.theatricalStatus || 'IN_THEATERS',
+            originCountry: getMovieCountry(m),
           };
           break;
         }
@@ -448,8 +482,8 @@ export function CinePlusChatbot() {
         // Buscar si tenemos tarjeta de la película consultada
         const targetMovieInBillboard = billboardMovies.find(
           (m) =>
-            Number(m.id) === matchedMovieData!.id ||
-            m.title.toLowerCase().includes(matchedMovieData!.title.toLowerCase())
+            Number(m?.id) === matchedMovieData!.id ||
+            (m?.title && m.title.toLowerCase().includes(matchedMovieData!.title.toLowerCase()))
         );
 
         const movieCard: RecommendedMovieCard[] = targetMovieInBillboard
@@ -457,9 +491,9 @@ export function CinePlusChatbot() {
               {
                 id: Number(targetMovieInBillboard.id),
                 title: targetMovieInBillboard.title,
-                posterPath: targetMovieInBillboard.posterPath,
-                voteAverage: targetMovieInBillboard.voteAverage,
-                genres: targetMovieInBillboard.genres.map((g) => g.name),
+                posterPath: targetMovieInBillboard.posterPath || null,
+                voteAverage: targetMovieInBillboard.voteAverage || 7.0,
+                genres: getMovieGenreNames(targetMovieInBillboard),
               },
             ]
           : [];
@@ -541,13 +575,17 @@ export function CinePlusChatbot() {
       // 2. Filtrar películas en cartelera actual de TMDb que coincidan con el género
       let inTheatersGenreMatches: Movie[] = [];
       if (activeGenreMeta && billboardMovies.length > 0) {
-        inTheatersGenreMatches = billboardMovies.filter((m) =>
-          m.genres.some(
-            (g) =>
-              g.id === activeGenreMeta.id ||
-              activeGenreMeta.keywords.some((kw) => g.name.toLowerCase().includes(kw))
-          )
-        );
+        inTheatersGenreMatches = billboardMovies.filter((m) => {
+          if (!m?.genres || !Array.isArray(m.genres)) return false;
+          return m.genres.some((g: any) => {
+            const gid = typeof g === 'object' ? g?.id : undefined;
+            const gname = typeof g === 'object' ? (g?.name || '') : (typeof g === 'string' ? g : '');
+            return (
+              gid === activeGenreMeta.id ||
+              activeGenreMeta.keywords.some((kw) => gname.toLowerCase().includes(kw))
+            );
+          });
+        });
       }
 
       // 3. Si se pidió un género específico, consultar TMDb Discover para traer las mejores del género
@@ -587,22 +625,22 @@ export function CinePlusChatbot() {
         promptContext += `PAÍS / NACIONALIDAD SOLICITADA POR EL USUARIO: "${detectedCountry.name}" (Código ISO: ${detectedCountry.code}).\n`;
         if (topCountryMoviesFromTmdb.length > 0) {
           promptContext += `Películas oficiales de ${detectedCountry.name} obtenidas en tiempo real desde TMDb:\n` +
-            topCountryMoviesFromTmdb.slice(0, 5).map((m) => `- "${m.title}" (Año: ${m.releaseDate ? m.releaseDate.slice(0, 4) : 'Reciente'}, País de origen: ${m.getCountryDisplayName()}, TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 120)}...`).join('\n') + '\n';
+            topCountryMoviesFromTmdb.slice(0, 5).map((m) => `- "${m.title}" (Año: ${getMovieYear(m)}, País de origen: ${getMovieCountry(m)}, TMDb: ${m.voteAverage || 7}/10): ${(m.overview || '').slice(0, 120)}...`).join('\n') + '\n';
         }
         promptContext += `DIRECTRIZ TAXATIVA: Recomienda ÚNICAMENTE películas auténticas de ${detectedCountry.name}. NO menciones títulos de otros países ni atribuyas falsamente esta procedencia a películas extranjeras.\n`;
       } else if (activeGenreMeta) {
         promptContext += `GÉNERO SOLICITADO POR EL USUARIO: "${activeGenreMeta.name}".\n`;
         if (inTheatersGenreMatches.length > 0) {
           promptContext += `Películas de ${activeGenreMeta.name} EN CARTELERA AHORA (Cineplanet / Cinemark):\n` +
-            inTheatersGenreMatches.slice(0, 3).map((m) => `- "${m.title}" (País de origen: ${m.getCountryDisplayName()}, TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 100)}...`).join('\n') + '\n';
+            inTheatersGenreMatches.slice(0, 3).map((m) => `- "${m.title}" (País de origen: ${getMovieCountry(m)}, TMDb: ${m.voteAverage || 7}/10): ${(m.overview || '').slice(0, 100)}...`).join('\n') + '\n';
         }
         if (topGenreMoviesFromTmdb.length > 0) {
           promptContext += `Otras películas destacadas de ${activeGenreMeta.name} en el catálogo de TMDb:\n` +
-            topGenreMoviesFromTmdb.slice(0, 3).map((m) => `- "${m.title}" (Año: ${m.releaseDate.slice(0, 4)}, País de origen: ${m.getCountryDisplayName()}, TMDb: ${m.voteAverage}/10): ${m.overview.slice(0, 100)}...`).join('\n') + '\n';
+            topGenreMoviesFromTmdb.slice(0, 3).map((m) => `- "${m.title}" (Año: ${getMovieYear(m)}, País de origen: ${getMovieCountry(m)}, TMDb: ${m.voteAverage || 7}/10): ${(m.overview || '').slice(0, 100)}...`).join('\n') + '\n';
         }
       } else {
         promptContext += `Cartelera general actual en cines de Perú (TMDb):\n` +
-          billboardMovies.slice(0, 6).map((m) => `- "${m.title}" (País de origen: ${m.getCountryDisplayName()}, Géneros: ${m.genres.map((g) => g.name).join(', ')}) [TMDb: ${m.voteAverage}/10]`).join('\n') + '\n';
+          billboardMovies.slice(0, 6).map((m) => `- "${m.title}" (País de origen: ${getMovieCountry(m)}, Géneros: ${getMovieGenreNames(m).join(', ')}) [TMDb: ${m.voteAverage || 7}/10]`).join('\n') + '\n';
       }
 
       const generalPrompt =
@@ -633,9 +671,9 @@ export function CinePlusChatbot() {
       const cardsToAttach: RecommendedMovieCard[] = cardCandidates.slice(0, 4).map((m) => ({
         id: Number(m.id),
         title: m.title,
-        posterPath: m.posterPath,
-        voteAverage: m.voteAverage,
-        genres: m.genres.map((g) => g.name),
+        posterPath: m.posterPath || null,
+        voteAverage: m.voteAverage || 7.0,
+        genres: getMovieGenreNames(m),
       }));
 
       const assistantMsg: ChatMessage = {
@@ -649,14 +687,15 @@ export function CinePlusChatbot() {
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error procesando respuesta multi-agente en chat:', err);
+      const errMsg = err?.message || 'Por favor intenta nuevamente.';
       setMessages((prev) => [
         ...prev,
         {
           id: `err_${Date.now()}`,
           sender: 'assistant',
-          text: 'Ocurrió un error consultando al comité. Por favor intenta nuevamente.',
+          text: `Ocurrió un error consultando al comité (${errMsg}). Por favor intenta nuevamente.`,
           timestamp: new Date(),
         },
       ]);
